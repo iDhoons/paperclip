@@ -300,3 +300,10 @@ export {
   type SetPluginState,
   type ListPluginState,
 } from "./plugin.js";
+
+export {
+  planFrontmatterSchema,
+  parsedTaskSchema,
+  parsedPhaseSchema,
+  parsedPlanSchema,
+} from "./plan-onboarding.js";

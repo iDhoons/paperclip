@@ -340,7 +340,14 @@ export type {
   PluginWebhookDeliveryRecord,
   QuotaWindow,
   ProviderQuotaResult,
+  PlanFrontmatter,
+  ParsedPlan,
+  ParsedPhase,
+  ParsedTask,
+  OnboardingResult,
 } from "./types/index.js";
+
+export { PLAN_FRONTMATTER_DEFAULTS } from "./types/index.js";
 
 export {
   DEFAULT_FEEDBACK_DATA_SHARING_PREFERENCE,
@@ -592,6 +599,10 @@ export {
   type PluginStateScopeKey,
   type SetPluginState,
   type ListPluginState,
+  planFrontmatterSchema,
+  parsedTaskSchema,
+  parsedPhaseSchema,
+  parsedPlanSchema,
 } from "./validators/index.js";
 
 export { API_PREFIX, API } from "./api.js";

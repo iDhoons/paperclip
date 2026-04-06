@@ -730,6 +730,17 @@ export async function startServer(): Promise<StartedServer> {
         );
       }
 
+      // Plan Watcher: ~/dev/ 하위 task_plan.md 변경 자동 감지
+      if (process.env.PAPERCLIP_PLAN_WATCHER !== "false") {
+        import("./plan-onboarding/start-watcher.js")
+          .then(({ startPlanWatcher }) => {
+            startPlanWatcher({ serverUrl: `http://${config.host === "0.0.0.0" ? "127.0.0.1" : config.host}:${listenPort}` });
+          })
+          .catch((err) => {
+            logger.warn({ err }, "Plan watcher failed to start");
+          });
+      }
+
       resolveListen();
     });
   });

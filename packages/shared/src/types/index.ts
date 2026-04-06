@@ -217,3 +217,11 @@ export type {
   PluginJobRunRecord,
   PluginWebhookDeliveryRecord,
 } from "./plugin.js";
+export type {
+  PlanFrontmatter,
+  ParsedPlan,
+  ParsedPhase,
+  ParsedTask,
+  OnboardingResult,
+} from "./plan-onboarding.js";
+export { PLAN_FRONTMATTER_DEFAULTS } from "./plan-onboarding.js";
