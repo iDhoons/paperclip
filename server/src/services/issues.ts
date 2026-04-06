@@ -37,6 +37,88 @@ import { getDefaultCompanyGoal } from "./goals.js";
 const ALL_ISSUE_STATUSES = ["backlog", "todo", "in_progress", "in_review", "blocked", "done", "cancelled"];
 const MAX_ISSUE_COMMENT_PAGE_LIMIT = 500;
 
+// Role-keyword mapping for auto-assignment
+const ROLE_KEYWORDS: Record<string, string[]> = {
+  engineer: ["개발", "구현", "코드", "버그", "fix", "implement", "build", "api", "기능", "feature", "배포", "deploy", "migration", "refactor", "리팩토링"],
+  designer: ["디자인", "design", "ui", "ux", "figma", "레이아웃", "layout", "스타일", "style", "css"],
+  qa: ["테스트", "test", "e2e", "검증", "qa", "검수", "품질", "quality"],
+  devops: ["인프라", "infra", "ci/cd", "배포", "deploy", "모니터링", "monitor", "sentry", "vercel", "docker", "서버"],
+  pm: ["기획", "plan", "요구사항", "requirement", "스펙", "spec", "일정", "roadmap"],
+  researcher: ["조사", "research", "분석", "analysis", "벤치마크", "benchmark"],
+  cto: ["아키텍처", "architecture", "설계", "기술 전략", "tech strategy"],
+};
+
+async function autoAssignAgent(
+  dbConn: Db,
+  issue: typeof issues.$inferSelect,
+): Promise<string | null> {
+  // 1. 프로젝트 리드 에이전트가 있으면 우선 배정
+  if (issue.projectId) {
+    const project = await dbConn
+      .select({ leadAgentId: projects.leadAgentId })
+      .from(projects)
+      .where(eq(projects.id, issue.projectId))
+      .then((rows) => rows[0] ?? null);
+    if (project?.leadAgentId) {
+      // 배정 가능한 상태인지 확인
+      const lead = await dbConn
+        .select({ id: agents.id, status: agents.status })
+        .from(agents)
+        .where(eq(agents.id, project.leadAgentId))
+        .then((rows) => rows[0] ?? null);
+      if (lead && lead.status !== "terminated" && lead.status !== "pending_approval") {
+        return lead.id;
+      }
+    }
+  }
+
+  // 2. 키워드 매칭으로 적절한 role 찾기
+  const text = `${issue.title ?? ""} ${issue.description ?? ""}`.toLowerCase();
+  const roleScores: Record<string, number> = {};
+  for (const [role, keywords] of Object.entries(ROLE_KEYWORDS)) {
+    roleScores[role] = keywords.filter((kw) => text.includes(kw.toLowerCase())).length;
+  }
+  const bestRole = Object.entries(roleScores)
+    .filter(([, score]) => score > 0)
+    .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  // 해당 role의 배정 가능한 에이전트 찾기
+  const targetRole = bestRole ?? "engineer"; // 매칭 없으면 engineer 기본
+  const candidates = await dbConn
+    .select({ id: agents.id, status: agents.status })
+    .from(agents)
+    .where(
+      and(
+        eq(agents.companyId, issue.companyId),
+        eq(agents.role, targetRole),
+        ne(agents.status, "terminated"),
+        ne(agents.status, "pending_approval"),
+      ),
+    );
+
+  if (candidates.length > 0) {
+    // idle 상태 우선, 없으면 아무나
+    const idle = candidates.find((a) => a.status === "idle");
+    return (idle ?? candidates[0]!).id;
+  }
+
+  // 3. 해당 role이 없으면 아무 배정 가능한 에이전트 (CEO 제외)
+  const fallback = await dbConn
+    .select({ id: agents.id })
+    .from(agents)
+    .where(
+      and(
+        eq(agents.companyId, issue.companyId),
+        ne(agents.role, "ceo"),
+        ne(agents.status, "terminated"),
+        ne(agents.status, "pending_approval"),
+      ),
+    )
+    .then((rows) => rows[0] ?? null);
+
+  return fallback?.id ?? null;
+}
+
 function assertTransition(from: string, to: string) {
   if (from === to) return;
   if (!ALL_ISSUE_STATUSES.includes(to)) {
@@ -1096,8 +1178,15 @@ export function issueService(db: Db) {
       if (data.assigneeUserId) {
         await assertAssignableUser(companyId, data.assigneeUserId);
       }
+      // Auto-assign: create 시에도 in_progress인데 담당자 없으면 자동 배정
       if (data.status === "in_progress" && !data.assigneeAgentId && !data.assigneeUserId) {
-        throw unprocessable("in_progress issues require an assignee");
+        const fakeIssue = { companyId, projectId: issueData.projectId ?? null, title: issueData.title ?? "", description: issueData.description ?? "" } as typeof issues.$inferSelect;
+        const autoAssigned = await autoAssignAgent(db, fakeIssue);
+        if (autoAssigned) {
+          issueData.assigneeAgentId = autoAssigned;
+        } else {
+          throw unprocessable("in_progress issues require an assignee");
+        }
       }
       return db.transaction(async (tx) => {
         const defaultCompanyGoal = await getDefaultCompanyGoal(tx, companyId);
@@ -1253,7 +1342,7 @@ export function issueService(db: Db) {
         updatedAt: new Date(),
       };
 
-      const nextAssigneeAgentId =
+      let nextAssigneeAgentId =
         issueData.assigneeAgentId !== undefined ? issueData.assigneeAgentId : existing.assigneeAgentId;
       const nextAssigneeUserId =
         issueData.assigneeUserId !== undefined ? issueData.assigneeUserId : existing.assigneeUserId;
@@ -1261,8 +1350,16 @@ export function issueService(db: Db) {
       if (nextAssigneeAgentId && nextAssigneeUserId) {
         throw unprocessable("Issue can only have one assignee");
       }
+
+      // Auto-assign: in_progress인데 담당자가 없으면 자동 배정
       if (patch.status === "in_progress" && !nextAssigneeAgentId && !nextAssigneeUserId) {
-        throw unprocessable("in_progress issues require an assignee");
+        const autoAssigned = await autoAssignAgent(db, existing);
+        if (autoAssigned) {
+          nextAssigneeAgentId = autoAssigned;
+          patch.assigneeAgentId = autoAssigned;
+        } else {
+          throw unprocessable("in_progress issues require an assignee");
+        }
       }
       if (issueData.assigneeAgentId) {
         await assertAssignableAgent(existing.companyId, issueData.assigneeAgentId);

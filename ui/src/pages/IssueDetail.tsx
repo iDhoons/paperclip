@@ -646,8 +646,26 @@ export function IssueDetail() {
 
   const updateIssue = useMutation({
     mutationFn: (data: Record<string, unknown>) => issuesApi.update(issueId!, data),
-    onSuccess: () => {
+    onSuccess: (result, variables) => {
+      // 자동 배정 감지: assignee를 안 보냈는데 응답에 있으면 자동 배정된 것
+      if (!variables.assigneeAgentId && result.assigneeAgentId && variables.status) {
+        const assignedAgent = agents?.find((a) => a.id === result.assigneeAgentId);
+        if (assignedAgent) {
+          pushToast({
+            title: "Auto-assigned",
+            body: `${assignedAgent.name} has been automatically assigned`,
+            tone: "info",
+          });
+        }
+      }
       invalidateIssue();
+    },
+    onError: (err) => {
+      pushToast({
+        title: "Failed to update issue",
+        body: err instanceof Error ? err.message : "Unable to update issue",
+        tone: "error",
+      });
     },
   });
 
