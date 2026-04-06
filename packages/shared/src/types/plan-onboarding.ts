@@ -55,6 +55,9 @@ export interface ParsedPlan {
   /** 프로젝트 목표 (**Goal:** 값) */
   goal: string;
 
+  /** 프로젝트 목적 (**Purpose:** 값) — Goal의 상위 맥락 */
+  purpose?: string;
+
   /** 아키텍처 설명 */
   architecture?: string;
 
@@ -119,8 +122,11 @@ export interface OnboardingResult {
   /** 생성/재사용된 프로젝트 ID */
   projectId: string;
 
-  /** 생성된 목표 ID */
+  /** 생성된 목표 ID (이슈가 참조하는 Goal) */
   goalId: string;
+
+  /** 프로젝트 목적 Goal ID (purpose가 있을 때 생성되는 상위 Goal) */
+  purposeGoalId?: string;
 
   /** 채용된 에이전트 목록 */
   agents: Array<{

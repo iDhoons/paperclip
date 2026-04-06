@@ -43,6 +43,7 @@ export function parsePlanContent(
     frontmatter,
     title: extractTitle(lines),
     goal: extractMeta(lines, "Goal") || "No goal specified",
+    purpose: extractMeta(lines, "Purpose") || undefined,
     architecture: extractMeta(lines, "Architecture") || undefined,
     techStack: extractTechStack(lines),
     created: extractMeta(lines, "Created") || undefined,

@@ -112,6 +112,52 @@ Phase 1: Project Setup — Status: **completed**
     expect(result.phases[0].tasks).toHaveLength(2);
   });
 
+  it("Purpose 필드를 파싱한다", () => {
+    const input = `---
+project: deck-planner
+---
+
+# Deck Planner
+
+**Purpose:** 데크 시공 시장의 디지털 전환을 가속화
+**Goal:** 자재 견적 자동화 웹앱 MVP 완성
+**Tech Stack:** Next.js 15, Three.js
+
+## Phases
+
+### Phase 1: Setup
+
+- [ ] 1.1: 프로젝트 초기화
+`;
+
+    const result = parsePlanContent(input);
+
+    expect(result.purpose).toBe("데크 시공 시장의 디지털 전환을 가속화");
+    expect(result.goal).toBe("자재 견적 자동화 웹앱 MVP 완성");
+  });
+
+  it("Purpose가 없으면 undefined이다", () => {
+    const input = `---
+project: test
+---
+
+# Test
+
+**Goal:** 테스트 목표
+
+## Phases
+
+### Phase 1: Setup
+
+- [ ] 1.1: 태스크
+`;
+
+    const result = parsePlanContent(input);
+
+    expect(result.purpose).toBeUndefined();
+    expect(result.goal).toBe("테스트 목표");
+  });
+
   it("Story 형식 태스크를 파싱한다", () => {
     const input = `---
 project: aichatbot

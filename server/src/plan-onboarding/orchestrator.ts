@@ -63,12 +63,25 @@ export async function onboardFromPlan(
   const agentSvc = agentService(db);
   const issues = issueService(db);
 
-  // 1. Goal 생성
+  // 1. Goal 생성 (purpose가 있으면 계층 구조: purpose → goal)
+  let purposeGoalId: string | undefined;
+
+  if (plan.purpose) {
+    const purposeGoal = await goals.create(companyId, {
+      title: plan.purpose,
+      description: plan.architecture || undefined,
+      level: "project",
+      status: "active",
+    });
+    purposeGoalId = purposeGoal.id;
+  }
+
   const goal = await goals.create(companyId, {
     title: plan.goal,
     description: plan.architecture || undefined,
-    level: "project",
+    level: plan.purpose ? "task" : "project",
     status: "active",
+    parentId: purposeGoalId || undefined,
   });
 
   // 2. Project 생성 또는 재사용
@@ -124,6 +137,7 @@ export async function onboardFromPlan(
         goalId: goal.id,
         assigneeAgentId:
           plan.frontmatter.auto_assign !== false ? assignee?.id : undefined,
+        executionWorkspacePreference: "isolated_workspace",
       });
 
       createdIssues.push({
@@ -138,6 +152,7 @@ export async function onboardFromPlan(
   return {
     projectId,
     goalId: goal.id,
+    purposeGoalId,
     agents: createdAgents,
     issues: createdIssues,
     planHash,
@@ -224,6 +239,7 @@ function buildDryRunResult(
   return {
     projectId: "dry-run",
     goalId: "dry-run",
+    purposeGoalId: plan.purpose ? "dry-run-purpose" : undefined,
     agents: team.members.map((m, i) => ({
       id: `dry-run-agent-${i}`,
       name: m.name,

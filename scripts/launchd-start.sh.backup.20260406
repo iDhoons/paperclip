@@ -1,0 +1,15 @@
+#!/bin/bash
+# Paperclip 서버 LaunchAgent 시작 스크립트
+# LaunchAgent(com.user.paperclip)가 호출하는 엔트리포인트
+
+set -euo pipefail
+
+# NVM 환경 로드
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+# 프로젝트 디렉토리
+cd "$HOME/dev/paperclip"
+
+# 서버 시작 (pnpm dev:once = watch 없이 1회 실행)
+exec pnpm dev:once
