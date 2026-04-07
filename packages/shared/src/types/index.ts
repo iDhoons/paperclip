@@ -223,5 +223,8 @@ export type {
   ParsedPhase,
   ParsedTask,
   OnboardingResult,
+  PlanFolderStatus,
+  PlanSummary,
+  PlanBrowserResponse,
 } from "./plan-onboarding.js";
 export { PLAN_FRONTMATTER_DEFAULTS } from "./plan-onboarding.js";

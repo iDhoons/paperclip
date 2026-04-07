@@ -7,6 +7,7 @@ import {
   updateProjectSchema,
   updateProjectWorkspaceSchema,
 } from "@paperclipai/shared";
+import type { PlanSummary, PlanBrowserResponse, PlanFolderStatus } from "@paperclipai/shared";
 import { trackProjectCreated } from "@paperclipai/shared/telemetry";
 import { validate } from "../middleware/validate.js";
 import { projectService, logActivity, workspaceOperationService } from "../services/index.js";
@@ -14,6 +15,21 @@ import { conflict } from "../errors.js";
 import { assertCompanyAccess, getActorInfo } from "./authz.js";
 import { startRuntimeServicesForWorkspaceControl, stopRuntimeServicesForProjectWorkspace } from "../services/workspace-runtime.js";
 import { getTelemetryClient } from "../telemetry.js";
+import { parsePlanFile } from "../plan-onboarding/index.js";
+import { readdir, stat as fsStat } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { join, basename } from "node:path";
+import { homedir } from "node:os";
+
+async function readdirDirs(dir: string): Promise<string[]> {
+  const entries = await readdir(dir);
+  const results: string[] = [];
+  for (const name of entries) {
+    const s = await fsStat(join(dir, name));
+    if (s.isDirectory()) results.push(name);
+  }
+  return results;
+}
 
 export function projectRoutes(db: Db) {
   const router = Router();
@@ -407,6 +423,127 @@ export function projectRoutes(db: Db) {
     });
 
     res.json(workspace);
+  });
+
+  // -------------------------------------------------------------------------
+  // GET /projects/:id/plans — 프로젝트의 로컬 plan 폴더 스캔
+  // -------------------------------------------------------------------------
+  router.get("/projects/:id/plans", async (req, res) => {
+    const id = req.params.id as string;
+    const project = await svc.getById(id);
+    if (!project) {
+      res.status(404).json({ error: "Project not found" });
+      return;
+    }
+    assertCompanyAccess(req, project.companyId);
+
+    const projectName = project.name;
+    // "triplan — 여행 플래너" → "triplan" (slug 추출)
+    const projectSlug = projectName.split(/\s+[—\-:]\s+/)[0].trim();
+    const home = homedir();
+
+    const candidatePaths = [
+      join(home, "dev", projectSlug, "docs", "plans"),
+      join(home, "dev", "plans", projectSlug),
+      join(home, "dev", projectName, "docs", "plans"),
+      join(home, "dev", "plans", projectName),
+    ];
+
+    const basePath = candidatePaths.find((p) => existsSync(p)) ?? null;
+
+    if (!basePath) {
+      res.json({ projectName, basePath: candidatePaths[0], plans: [] } satisfies PlanBrowserResponse);
+      return;
+    }
+
+    const plans: PlanSummary[] = [];
+    const STATUS_FOLDERS: PlanFolderStatus[] = ["in-progress", "backlog", "done"];
+
+    try {
+      const topFolderNames = await readdirDirs(basePath);
+      const hasStatusFolders = STATUS_FOLDERS.some((sf) => topFolderNames.includes(sf));
+
+      if (hasStatusFolders) {
+        for (const folderStatus of STATUS_FOLDERS) {
+          const statusDir = join(basePath, folderStatus);
+          if (!existsSync(statusDir)) continue;
+
+          let slugNames: string[];
+          try { slugNames = await readdirDirs(statusDir); }
+          catch { continue; }
+
+          for (const slug of slugNames) {
+            const planFilePath = join(statusDir, slug, "task_plan.md");
+            if (!existsSync(planFilePath)) continue;
+
+            try {
+              const parsed = await parsePlanFile(planFilePath);
+              plans.push({
+                slug,
+                title: parsed.title,
+                folderStatus,
+                totalPhases: parsed.phases.length,
+                completedPhases: parsed.phases.filter((p) => p.status === "completed").length,
+                totalTasks: parsed.phases.reduce((acc, p) => acc + p.tasks.length, 0),
+                completedTasks: parsed.phases.reduce((acc, p) => acc + p.tasks.filter((t) => t.completed).length, 0),
+                currentPhase: parsed.currentPhase,
+                goal: parsed.goal,
+                filePath: planFilePath,
+              });
+            } catch { /* 파싱 실패 시 skip */ }
+          }
+        }
+      } else {
+        const singlePlanPath = join(basePath, "task_plan.md");
+        if (existsSync(singlePlanPath)) {
+          try {
+            const parsed = await parsePlanFile(singlePlanPath);
+            plans.push({
+              slug: basename(basePath),
+              title: parsed.title,
+              folderStatus: "in-progress",
+              totalPhases: parsed.phases.length,
+              completedPhases: parsed.phases.filter((p) => p.status === "completed").length,
+              totalTasks: parsed.phases.reduce((acc, p) => acc + p.tasks.length, 0),
+              completedTasks: parsed.phases.reduce((acc, p) => acc + p.tasks.filter((t) => t.completed).length, 0),
+              currentPhase: parsed.currentPhase,
+              goal: parsed.goal,
+              filePath: singlePlanPath,
+            });
+          } catch { /* skip */ }
+        } else {
+          let slugNames: string[];
+          try { slugNames = await readdirDirs(basePath); }
+          catch { slugNames = []; }
+
+          for (const slug of slugNames) {
+            const planFilePath = join(basePath, slug, "task_plan.md");
+            if (!existsSync(planFilePath)) continue;
+
+            try {
+              const parsed = await parsePlanFile(planFilePath);
+              plans.push({
+                slug,
+                title: parsed.title,
+                folderStatus: "in-progress",
+                totalPhases: parsed.phases.length,
+                completedPhases: parsed.phases.filter((p) => p.status === "completed").length,
+                totalTasks: parsed.phases.reduce((acc, p) => acc + p.tasks.length, 0),
+                completedTasks: parsed.phases.reduce((acc, p) => acc + p.tasks.filter((t) => t.completed).length, 0),
+                currentPhase: parsed.currentPhase,
+                goal: parsed.goal,
+                filePath: planFilePath,
+              });
+            } catch { /* skip */ }
+          }
+        }
+      }
+    } catch {
+      res.json({ projectName, basePath, plans: [] } satisfies PlanBrowserResponse);
+      return;
+    }
+
+    res.json({ projectName, basePath, plans } satisfies PlanBrowserResponse);
   });
 
   router.delete("/projects/:id", async (req, res) => {

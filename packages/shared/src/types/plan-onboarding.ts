@@ -146,3 +146,38 @@ export interface OnboardingResult {
   /** 플랜 해시 (변경 감지용) */
   planHash: string;
 }
+
+// ---------------------------------------------------------------------------
+// 4. Plan Browser — 프로젝트의 plan 폴더 스캔 결과
+// ---------------------------------------------------------------------------
+
+export type PlanFolderStatus = "in-progress" | "backlog" | "done";
+
+export interface PlanSummary {
+  /** plan 폴더 이름 (예: "quality-fix") */
+  slug: string;
+  /** plan 제목 (task_plan.md의 # 헤딩) */
+  title: string;
+  /** 폴더 기반 상태 */
+  folderStatus: PlanFolderStatus;
+  /** 전체 phase 수 */
+  totalPhases: number;
+  /** 완료된 phase 수 */
+  completedPhases: number;
+  /** 전체 task 수 */
+  totalTasks: number;
+  /** 완료된 task 수 */
+  completedTasks: number;
+  /** 현재 진행 중인 Phase 이름 */
+  currentPhase?: string;
+  /** 목표 */
+  goal: string;
+  /** task_plan.md 파일 절대 경로 */
+  filePath: string;
+}
+
+export interface PlanBrowserResponse {
+  projectName: string;
+  basePath: string;
+  plans: PlanSummary[];
+}
