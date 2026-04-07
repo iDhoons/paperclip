@@ -43,6 +43,18 @@ if [ -d "$BACKUP_DIR" ]; then
     fi
 fi
 
+# Clean up old run logs to prevent ENOSPC (keep last 20 runs)
+RUN_LOG_DIR="/paperclip/.paperclip/instances/default/data/run-logs"
+if [ -d "$RUN_LOG_DIR" ]; then
+    run_log_count=$(find "$RUN_LOG_DIR" -maxdepth 1 -type d | wc -l)
+    if [ "$run_log_count" -gt 21 ]; then
+        echo "Pruning old run logs ($run_log_count dirs, keeping 20 newest)"
+        ls -1t "$RUN_LOG_DIR" | tail -n +21 | while read -r d; do
+            rm -rf "$RUN_LOG_DIR/$d"
+        done
+    fi
+fi
+
 # Pre-install bundled plugins: overwrite the old npm-installed plugin
 # with the workspace build so the server loads the latest code.
 # Railway DB has "paperclip-plugin-discord" (unscoped), so link to that path.
