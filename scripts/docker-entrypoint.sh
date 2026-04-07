@@ -43,15 +43,15 @@ if [ -d "$BACKUP_DIR" ]; then
     fi
 fi
 
-# Pre-install bundled plugins: symlink from workspace into the plugin
-# directory so the server discovers them and node can resolve all deps
-# through the workspace node_modules.
+# Pre-install bundled plugins: overwrite the old npm-installed plugin
+# with the workspace build so the server loads the latest code.
+# Railway DB has "paperclip-plugin-discord" (unscoped), so link to that path.
 PLUGIN_DIR="/paperclip/.paperclip/plugins"
-mkdir -p "$PLUGIN_DIR/node_modules/@paperclipai"
 if [ -d /app/packages/plugins/plugin-discord/dist ]; then
-    rm -rf "$PLUGIN_DIR/node_modules/@paperclipai/plugin-discord"
-    ln -sf /app/packages/plugins/plugin-discord "$PLUGIN_DIR/node_modules/@paperclipai/plugin-discord"
-    echo "Linked plugin-discord into $PLUGIN_DIR"
+    mkdir -p "$PLUGIN_DIR/node_modules"
+    rm -rf "$PLUGIN_DIR/node_modules/paperclip-plugin-discord"
+    ln -sf /app/packages/plugins/plugin-discord "$PLUGIN_DIR/node_modules/paperclip-plugin-discord"
+    echo "Linked plugin-discord (unscoped) into $PLUGIN_DIR"
 fi
 
 exec gosu node "$@"
