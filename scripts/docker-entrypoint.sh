@@ -43,4 +43,15 @@ if [ -d "$BACKUP_DIR" ]; then
     fi
 fi
 
+# Pre-install bundled plugins: symlink from workspace into the plugin
+# directory so the server discovers them and node can resolve all deps
+# through the workspace node_modules.
+PLUGIN_DIR="/paperclip/.paperclip/plugins"
+mkdir -p "$PLUGIN_DIR/node_modules/@paperclipai"
+if [ -d /app/packages/plugins/plugin-discord/dist ]; then
+    rm -rf "$PLUGIN_DIR/node_modules/@paperclipai/plugin-discord"
+    ln -sf /app/packages/plugins/plugin-discord "$PLUGIN_DIR/node_modules/@paperclipai/plugin-discord"
+    echo "Linked plugin-discord into $PLUGIN_DIR"
+fi
+
 exec gosu node "$@"

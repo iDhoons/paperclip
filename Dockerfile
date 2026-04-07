@@ -36,6 +36,7 @@ COPY packages/adapters/openclaw-gateway/package.json packages/adapters/openclaw-
 COPY packages/adapters/opencode-local/package.json packages/adapters/opencode-local/
 COPY packages/adapters/pi-local/package.json packages/adapters/pi-local/
 COPY packages/plugins/sdk/package.json packages/plugins/sdk/
+COPY packages/plugins/plugin-discord/package.json packages/plugins/plugin-discord/
 COPY patches/ patches/
 
 RUN pnpm install --frozen-lockfile
@@ -49,6 +50,7 @@ RUN pnpm --filter @paperclipai/shared build \
   && pnpm --filter @paperclipai/adapter-utils build \
   && pnpm --filter './packages/adapters/*' build \
   && pnpm --filter @paperclipai/plugin-sdk build \
+  && pnpm --filter @paperclipai/plugin-discord build \
   && pnpm --filter @paperclipai/ui build \
   && pnpm --filter @paperclipai/server build
 RUN test -f server/dist/index.js || (echo "ERROR: server build output missing" && exit 1)
