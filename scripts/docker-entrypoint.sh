@@ -22,8 +22,25 @@ if [ "$(id -g node)" -ne "$PGID" ]; then
     changed=1
 fi
 
-if [ "$changed" = "1" ]; then
-    chown -R node:node /paperclip
+# Always ensure /paperclip is writable by node (volume mounts may have root ownership)
+chown -R node:node /paperclip 2>/dev/null || true
+
+# Symlink plugin dir from user home to volume (gosu sets HOME to /home/paperclip)
+NODE_HOME=$(getent passwd node | cut -d: -f6)
+if [ -n "$NODE_HOME" ] && [ "$NODE_HOME" != "/paperclip" ]; then
+    mkdir -p "$NODE_HOME"
+    rm -rf "$NODE_HOME/.paperclip" 2>/dev/null || true
+    ln -sf /paperclip/.paperclip "$NODE_HOME/.paperclip"
+fi
+
+# Clean up old database backups to prevent ENOSPC on ephemeral disk
+BACKUP_DIR="/paperclip/.paperclip/instances/default/data/backups"
+if [ -d "$BACKUP_DIR" ]; then
+    backup_count=$(find "$BACKUP_DIR" -type f | wc -l)
+    if [ "$backup_count" -gt 0 ]; then
+        echo "Cleaning $backup_count old backup files from $BACKUP_DIR"
+        rm -rf "$BACKUP_DIR"/*
+    fi
 fi
 
 exec gosu node "$@"

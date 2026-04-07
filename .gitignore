@@ -28,8 +28,8 @@ cli/package.dev.json
 # Build artifacts in src directories
 server/src/**/*.js
 server/src/**/*.js.map
-server/src/**/*.d.ts
 server/src/**/*.d.ts.map
+# Note: server/src/**/*.d.ts is NOT ignored — express.d.ts is hand-authored
 tmp/
 feedback-export-*
 
