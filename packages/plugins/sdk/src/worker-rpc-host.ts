@@ -34,6 +34,7 @@
  * @see PLUGIN_SPEC.md §14 — SDK Surface
  */
 
+import fs from "node:fs";
 import path from "node:path";
 import { createInterface, type Interface as ReadlineInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
@@ -209,8 +210,10 @@ export function runWorker(
   }
   const entry = process.argv[1];
   if (typeof entry !== "string") return;
-  const thisFile = path.resolve(fileURLToPath(moduleUrl));
-  const entryPath = path.resolve(entry);
+  // Resolve symlinks so that symlinked plugin directories (e.g. Docker
+  // entrypoint linking bundled plugins into the volume) match correctly.
+  const thisFile = fs.realpathSync(path.resolve(fileURLToPath(moduleUrl)));
+  const entryPath = fs.realpathSync(path.resolve(entry));
   if (thisFile === entryPath) {
     startWorkerRpcHost({ plugin });
   }
