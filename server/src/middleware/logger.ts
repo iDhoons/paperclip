@@ -21,7 +21,7 @@ fs.mkdirSync(logDir, { recursive: true });
 const logFile = path.join(logDir, "server.log");
 
 const sharedOpts = {
-  translateTime: "HH:MM:ss",
+  translateTime: "SYS:yyyy-mm-dd HH:MM:ss",
   ignore: "pid,hostname",
   singleLine: true,
 };

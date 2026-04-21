@@ -75,6 +75,7 @@ describe("resolveRuntimeSessionParamsForWorkspace", () => {
 
     expect(result.sessionParams).toMatchObject({
       sessionId: "session-1",
+      agentId,
       cwd: "/tmp/new-project-cwd",
       workspaceId: "workspace-1",
     });
@@ -82,8 +83,9 @@ describe("resolveRuntimeSessionParamsForWorkspace", () => {
   });
 
   it("does not migrate when previous session cwd is not the fallback workspace", () => {
+    const agentId = "agent-123";
     const result = resolveRuntimeSessionParamsForWorkspace({
-      agentId: "agent-123",
+      agentId,
       previousSessionParams: {
         sessionId: "session-1",
         cwd: "/tmp/some-other-cwd",
@@ -94,6 +96,7 @@ describe("resolveRuntimeSessionParamsForWorkspace", () => {
 
     expect(result.sessionParams).toEqual({
       sessionId: "session-1",
+      agentId,
       cwd: "/tmp/some-other-cwd",
       workspaceId: "workspace-1",
     });
@@ -119,8 +122,28 @@ describe("resolveRuntimeSessionParamsForWorkspace", () => {
 
     expect(result.sessionParams).toEqual({
       sessionId: "session-1",
+      agentId,
       cwd: fallbackCwd,
       workspaceId: "workspace-1",
+    });
+    expect(result.warning).toBeNull();
+  });
+
+  it("adds current agent ownership metadata even when the session params are not migrated", () => {
+    const agentId = "agent-123";
+    const result = resolveRuntimeSessionParamsForWorkspace({
+      agentId,
+      previousSessionParams: {
+        sessionId: "session-1",
+        cwd: "/tmp/some-other-cwd",
+      },
+      resolvedWorkspace: buildResolvedWorkspace({ cwd: "/tmp/new-project-cwd" }),
+    });
+
+    expect(result.sessionParams).toEqual({
+      sessionId: "session-1",
+      agentId,
+      cwd: "/tmp/some-other-cwd",
     });
     expect(result.warning).toBeNull();
   });

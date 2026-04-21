@@ -535,37 +535,40 @@ export function resolveRuntimeSessionParamsForWorkspace(input: {
   resolvedWorkspace: ResolvedWorkspaceForRun;
 }) {
   const { agentId, previousSessionParams, resolvedWorkspace } = input;
+  const normalizedPreviousSessionParams = previousSessionParams
+    ? { ...previousSessionParams, agentId }
+    : null;
   const previousSessionId = readNonEmptyString(previousSessionParams?.sessionId);
   const previousCwd = readNonEmptyString(previousSessionParams?.cwd);
   if (!previousSessionId || !previousCwd) {
     return {
-      sessionParams: previousSessionParams,
+      sessionParams: normalizedPreviousSessionParams,
       warning: null as string | null,
     };
   }
   if (resolvedWorkspace.source !== "project_primary") {
     return {
-      sessionParams: previousSessionParams,
+      sessionParams: normalizedPreviousSessionParams,
       warning: null as string | null,
     };
   }
   const projectCwd = readNonEmptyString(resolvedWorkspace.cwd);
   if (!projectCwd) {
     return {
-      sessionParams: previousSessionParams,
+      sessionParams: normalizedPreviousSessionParams,
       warning: null as string | null,
     };
   }
   const fallbackAgentHomeCwd = resolveDefaultAgentWorkspaceDir(agentId);
   if (path.resolve(previousCwd) !== path.resolve(fallbackAgentHomeCwd)) {
     return {
-      sessionParams: previousSessionParams,
+      sessionParams: normalizedPreviousSessionParams,
       warning: null as string | null,
     };
   }
   if (path.resolve(projectCwd) === path.resolve(previousCwd)) {
     return {
-      sessionParams: previousSessionParams,
+      sessionParams: normalizedPreviousSessionParams,
       warning: null as string | null,
     };
   }
@@ -576,13 +579,13 @@ export function resolveRuntimeSessionParamsForWorkspace(input: {
     previousWorkspaceId !== resolvedWorkspace.workspaceId
   ) {
     return {
-      sessionParams: previousSessionParams,
+      sessionParams: normalizedPreviousSessionParams,
       warning: null as string | null,
     };
   }
 
   const migratedSessionParams: Record<string, unknown> = {
-    ...(previousSessionParams ?? {}),
+    ...(normalizedPreviousSessionParams ?? {}),
     cwd: projectCwd,
   };
   if (resolvedWorkspace.workspaceId) migratedSessionParams.workspaceId = resolvedWorkspace.workspaceId;
@@ -2939,6 +2942,18 @@ export function heartbeatService(db: Db) {
         previousDisplayId: runtimeForAdapter.sessionDisplayId,
         previousLegacySessionId: runtimeForAdapter.sessionId,
       });
+      if (nextSessionState.params || nextSessionState.displayId || nextSessionState.legacySessionId) {
+        const mergedSessionParams = {
+          ...(runtimeSessionParamsForAdapter ?? {}),
+          ...(nextSessionState.params ?? {}),
+          agentId: agent.id,
+          sessionId:
+            readNonEmptyString(nextSessionState.params?.sessionId) ??
+            nextSessionState.legacySessionId ??
+            nextSessionState.displayId,
+        };
+        nextSessionState.params = normalizeSessionParams(sessionCodec.serialize(mergedSessionParams));
+      }
       const rawUsage = normalizeUsageTotals(adapterResult.usage);
       const sessionUsageResolution = await resolveNormalizedUsageForSession({
         agentId: agent.id,

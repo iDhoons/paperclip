@@ -408,11 +408,25 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const runtimeSessionParams = parseObject(runtime.sessionParams);
   const runtimeSessionId = asString(runtimeSessionParams.sessionId, runtime.sessionId ?? "");
   const runtimeSessionCwd = asString(runtimeSessionParams.cwd, "");
+  const runtimeSessionAgentId = asString(runtimeSessionParams.agentId, "");
+  const sessionOwnershipKnown = runtimeSessionAgentId.length > 0;
+  const sessionOwnershipMatches = sessionOwnershipKnown && runtimeSessionAgentId === agent.id;
   const canResumeSession =
     runtimeSessionId.length > 0 &&
+    sessionOwnershipMatches &&
     (runtimeSessionCwd.length === 0 || path.resolve(runtimeSessionCwd) === path.resolve(cwd));
   const sessionId = canResumeSession ? runtimeSessionId : null;
-  if (runtimeSessionId && !canResumeSession) {
+  if (runtimeSessionId && !sessionOwnershipKnown) {
+    await onLog(
+      "stdout",
+      `[paperclip] Codex session "${runtimeSessionId}" is missing agent ownership metadata and will be restarted with a fresh session.\n`,
+    );
+  } else if (runtimeSessionId && !sessionOwnershipMatches) {
+    await onLog(
+      "stdout",
+      `[paperclip] Codex session "${runtimeSessionId}" belongs to agent "${runtimeSessionAgentId}" and will not be resumed for agent "${agent.id}".\n`,
+    );
+  } else if (runtimeSessionId && !canResumeSession) {
     await onLog(
       "stdout",
       `[paperclip] Codex session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${cwd}".\n`,
@@ -576,6 +590,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     const resolvedSessionParams = resolvedSessionId
       ? ({
         sessionId: resolvedSessionId,
+        agentId: agent.id,
         cwd,
         ...(workspaceId ? { workspaceId } : {}),
         ...(workspaceRepoUrl ? { repoUrl: workspaceRepoUrl } : {}),

@@ -9,6 +9,16 @@ export const models: Array<{ id: string; label: string }> = [
   { id: "openai/gpt-5.2", label: "openai/gpt-5.2" },
   { id: "openai/gpt-5.1-codex-max", label: "openai/gpt-5.1-codex-max" },
   { id: "openai/gpt-5.1-codex-mini", label: "openai/gpt-5.1-codex-mini" },
+  // GLM (ZhipuAI) - 코딩에最强, GPT-5 대비 50% 이하 가격
+  { id: "zai/glm-5", label: "GLM-5" },
+  { id: "zai/glm-5-turbo", label: "GLM-5 Turbo" },
+  { id: "zai/glm-5.1", label: "GLM-5.1" },
+  { id: "zai/glm-4.7", label: "GLM-4.7" },
+  { id: "zai-coding-plan/glm-5", label: "GLM-5 (코딩플랜)" },
+  // MiniMax - MoE架构, Claude Opus 대비 90% 저렴
+  { id: "minimax/minimax-m2.5", label: "MiniMax M2.5" },
+  { id: "minimax/minimax-m2.5-highspeed", label: "MiniMax M2.5 Highspeed" },
+  { id: "minimax-coding-plan/minimax-m2.5", label: "MiniMax M2.5 (코딩플랜)" },
 ];
 
 export const agentConfigurationDoc = `# opencode_local agent configuration

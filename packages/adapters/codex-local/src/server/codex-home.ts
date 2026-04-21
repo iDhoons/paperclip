@@ -42,14 +42,9 @@ async function ensureParentDir(target: string): Promise<void> {
   await fs.mkdir(path.dirname(target), { recursive: true });
 }
 
-async function ensureSymlink(target: string, source: string): Promise<void> {
+async function reconcileExistingSymlink(target: string, source: string): Promise<void> {
   const existing = await fs.lstat(target).catch(() => null);
-  if (!existing) {
-    await ensureParentDir(target);
-    await fs.symlink(source, target);
-    return;
-  }
-
+  if (!existing) return;
   if (!existing.isSymbolicLink()) {
     return;
   }
@@ -62,6 +57,26 @@ async function ensureSymlink(target: string, source: string): Promise<void> {
 
   await fs.unlink(target);
   await fs.symlink(source, target);
+}
+
+async function ensureSymlink(target: string, source: string): Promise<void> {
+  const existing = await fs.lstat(target).catch(() => null);
+  if (existing) {
+    await reconcileExistingSymlink(target, source);
+    return;
+  }
+
+  await ensureParentDir(target);
+  try {
+    await fs.symlink(source, target);
+    return;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "EEXIST") {
+      throw err;
+    }
+  }
+
+  await reconcileExistingSymlink(target, source);
 }
 
 async function ensureCopiedFile(target: string, source: string): Promise<void> {
