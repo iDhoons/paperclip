@@ -241,6 +241,40 @@ function sanitizeBranchName(value: string): string {
     .slice(0, 120) || "paperclip-work";
 }
 
+export function resolveGitWorktreeBranchName(input: {
+  config: Record<string, unknown>;
+  issue: ExecutionWorkspaceIssueRef | null;
+  agent: ExecutionWorkspaceAgentRef;
+  projectId: string | null;
+  repoRef: string | null;
+}): string | null {
+  const rawStrategy = parseObject(input.config.workspaceStrategy);
+  const strategyType = asString(rawStrategy.type, "project_primary");
+  if (strategyType !== "git_worktree") return null;
+
+  const branchTemplate = asString(rawStrategy.branchTemplate, "{{issue.identifier}}-{{slug}}");
+  const renderedBranch = renderWorkspaceTemplate(branchTemplate, {
+    issue: input.issue,
+    agent: input.agent,
+    projectId: input.projectId,
+    repoRef: input.repoRef,
+  });
+  return sanitizeBranchName(renderedBranch);
+}
+
+export async function assertGitWorktreeOnBranch(input: {
+  cwd: string;
+  branchName: string | null;
+}) {
+  if (!input.branchName) return;
+  const actualBranch = await runGit(["rev-parse", "--abbrev-ref", "HEAD"], input.cwd);
+  if (actualBranch !== input.branchName) {
+    throw new Error(
+      `Execution workspace branch mismatch at "${input.cwd}": expected "${input.branchName}", found "${actualBranch}".`,
+    );
+  }
+}
+
 function isAbsolutePath(value: string) {
   return path.isAbsolute(value) || value.startsWith("~");
 }
@@ -618,14 +652,13 @@ export async function realizeExecutionWorkspace(input: {
   }
 
   const repoRoot = await runGit(["rev-parse", "--show-toplevel"], input.base.baseCwd);
-  const branchTemplate = asString(rawStrategy.branchTemplate, "{{issue.identifier}}-{{slug}}");
-  const renderedBranch = renderWorkspaceTemplate(branchTemplate, {
+  const branchName = resolveGitWorktreeBranchName({
+    config: input.config,
     issue: input.issue,
     agent: input.agent,
     projectId: input.base.projectId,
     repoRef: input.base.repoRef,
-  });
-  const branchName = sanitizeBranchName(renderedBranch);
+  }) ?? "paperclip-work";
   const configuredParentDir = asString(rawStrategy.worktreeParentDir, "");
   const worktreeParentDir = configuredParentDir
     ? resolveConfiguredPath(configuredParentDir, repoRoot)
@@ -644,6 +677,7 @@ export async function realizeExecutionWorkspace(input: {
   if (existingWorktree) {
     const existingGitDir = await runGit(["rev-parse", "--git-dir"], worktreePath).catch(() => null);
     if (existingGitDir) {
+      await assertGitWorktreeOnBranch({ cwd: worktreePath, branchName });
       if (input.recorder) {
         await input.recorder.recordOperation({
           phase: "worktree_prepare",

@@ -24,6 +24,7 @@ import {
 import { extractAgentMentionIds, extractProjectMentionIds, isUuidLike } from "@paperclipai/shared";
 import { conflict, notFound, unprocessable } from "../errors.js";
 import {
+  applyBranchWorktreeIsolationDefault,
   defaultIssueExecutionWorkspaceSettingsForProject,
   gateProjectExecutionWorkspacePolicy,
   issueExecutionWorkspaceModeForPersistedWorkspace,
@@ -1163,7 +1164,9 @@ export function issueService(db: Db) {
       data: IssueCreateInput,
     ) => {
       const { labelIds: inputLabelIds, inheritExecutionWorkspaceFromIssueId, ...issueData } = data;
-      const isolatedWorkspacesEnabled = (await instanceSettings.getExperimental()).enableIsolatedWorkspaces;
+      const experimentalSettings = await instanceSettings.getExperimental();
+      const isolatedWorkspacesEnabled =
+        experimentalSettings.enableIsolatedWorkspaces || experimentalSettings.enforceBranchWorktreeIsolation;
       if (!isolatedWorkspacesEnabled) {
         delete issueData.executionWorkspaceId;
         delete issueData.executionWorkspacePreference;
@@ -1241,9 +1244,12 @@ export function issueService(db: Db) {
             .then((rows) => rows[0] ?? null);
           executionWorkspaceSettings =
             defaultIssueExecutionWorkspaceSettingsForProject(
-              gateProjectExecutionWorkspacePolicy(
-                parseProjectExecutionWorkspacePolicy(project?.executionWorkspacePolicy),
-                isolatedWorkspacesEnabled,
+              applyBranchWorktreeIsolationDefault(
+                gateProjectExecutionWorkspacePolicy(
+                  parseProjectExecutionWorkspacePolicy(project?.executionWorkspacePolicy),
+                  isolatedWorkspacesEnabled,
+                ),
+                experimentalSettings.enforceBranchWorktreeIsolation,
               ),
             ) as Record<string, unknown> | null;
         }
@@ -1326,7 +1332,9 @@ export function issueService(db: Db) {
       if (!existing) return null;
 
       const { labelIds: nextLabelIds, ...issueData } = data;
-      const isolatedWorkspacesEnabled = (await instanceSettings.getExperimental()).enableIsolatedWorkspaces;
+      const experimentalSettings = await instanceSettings.getExperimental();
+      const isolatedWorkspacesEnabled =
+        experimentalSettings.enableIsolatedWorkspaces || experimentalSettings.enforceBranchWorktreeIsolation;
       if (!isolatedWorkspacesEnabled) {
         delete issueData.executionWorkspaceId;
         delete issueData.executionWorkspacePreference;

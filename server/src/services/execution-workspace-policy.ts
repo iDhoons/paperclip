@@ -9,9 +9,26 @@ import { asString, parseObject } from "../adapters/utils.js";
 
 type ParsedExecutionWorkspaceMode = Exclude<ExecutionWorkspaceMode, "inherit" | "reuse_existing">;
 
+export const DEFAULT_BRANCH_WORKTREE_STRATEGY: ExecutionWorkspaceStrategy = {
+  type: "git_worktree",
+  branchTemplate: "{{issue.identifier}}-{{slug}}",
+  worktreeParentDir: ".paperclip/worktrees",
+};
+
+export const DEFAULT_BRANCH_WORKTREE_POLICY: ProjectExecutionWorkspacePolicy = {
+  enabled: true,
+  defaultMode: "isolated_workspace",
+  allowIssueOverride: false,
+  workspaceStrategy: DEFAULT_BRANCH_WORKTREE_STRATEGY,
+};
+
 function cloneRecord(value: Record<string, unknown> | null | undefined): Record<string, unknown> | null {
   if (!value) return null;
   return { ...value };
+}
+
+function cloneStrategy(strategy: ExecutionWorkspaceStrategy): ExecutionWorkspaceStrategy {
+  return { ...strategy };
 }
 
 function parseExecutionWorkspaceStrategy(raw: unknown): ExecutionWorkspaceStrategy | null {
@@ -85,6 +102,33 @@ export function gateProjectExecutionWorkspacePolicy(
   return projectPolicy;
 }
 
+export function applyBranchWorktreeIsolationDefault(
+  projectPolicy: ProjectExecutionWorkspacePolicy | null,
+  enforceBranchWorktreeIsolation: boolean,
+): ProjectExecutionWorkspacePolicy | null {
+  if (!enforceBranchWorktreeIsolation) return projectPolicy;
+
+  if (!projectPolicy?.enabled) {
+    return {
+      ...DEFAULT_BRANCH_WORKTREE_POLICY,
+      workspaceStrategy: cloneStrategy(DEFAULT_BRANCH_WORKTREE_STRATEGY),
+    };
+  }
+
+  const workspaceStrategy =
+    projectPolicy.workspaceStrategy?.type === "git_worktree"
+      ? projectPolicy.workspaceStrategy
+      : DEFAULT_BRANCH_WORKTREE_STRATEGY;
+
+  return {
+    ...projectPolicy,
+    enabled: true,
+    defaultMode: "isolated_workspace",
+    allowIssueOverride: false,
+    workspaceStrategy: cloneStrategy(workspaceStrategy),
+  };
+}
+
 export function parseIssueExecutionWorkspaceSettings(raw: unknown): IssueExecutionWorkspaceSettings | null {
   const parsed = parseObject(raw);
   if (Object.keys(parsed).length === 0) return null;
@@ -153,7 +197,12 @@ export function resolveExecutionWorkspaceMode(input: {
   legacyUseProjectWorkspace: boolean | null;
 }): ParsedExecutionWorkspaceMode {
   const issueMode = input.issueSettings?.mode;
-  if (issueMode && issueMode !== "inherit" && issueMode !== "reuse_existing") {
+  if (
+    issueMode &&
+    issueMode !== "inherit" &&
+    issueMode !== "reuse_existing" &&
+    input.projectPolicy?.allowIssueOverride !== false
+  ) {
     return issueMode;
   }
   if (input.projectPolicy?.enabled) {
@@ -176,18 +225,22 @@ export function buildExecutionWorkspaceAdapterConfig(input: {
   legacyUseProjectWorkspace: boolean | null;
 }): Record<string, unknown> {
   const nextConfig = { ...input.agentConfig };
+  const canUseIssueWorkspaceOverrides = input.projectPolicy?.allowIssueOverride !== false;
   const projectHasPolicy = Boolean(input.projectPolicy?.enabled);
   const issueHasWorkspaceOverrides = Boolean(
-    input.issueSettings?.mode ||
-    input.issueSettings?.workspaceStrategy ||
-    input.issueSettings?.workspaceRuntime,
+    canUseIssueWorkspaceOverrides &&
+    (
+      input.issueSettings?.mode ||
+      input.issueSettings?.workspaceStrategy ||
+      input.issueSettings?.workspaceRuntime
+    ),
   );
   const hasWorkspaceControl = projectHasPolicy || issueHasWorkspaceOverrides || input.legacyUseProjectWorkspace === false;
 
   if (hasWorkspaceControl) {
     if (input.mode === "isolated_workspace") {
       const strategy =
-        input.issueSettings?.workspaceStrategy ??
+        (canUseIssueWorkspaceOverrides ? input.issueSettings?.workspaceStrategy : null) ??
         input.projectPolicy?.workspaceStrategy ??
         parseExecutionWorkspaceStrategy(nextConfig.workspaceStrategy) ??
         ({ type: "git_worktree" } satisfies ExecutionWorkspaceStrategy);
@@ -198,7 +251,7 @@ export function buildExecutionWorkspaceAdapterConfig(input: {
 
     if (input.mode === "agent_default") {
       delete nextConfig.workspaceRuntime;
-    } else if (input.issueSettings?.workspaceRuntime) {
+    } else if (canUseIssueWorkspaceOverrides && input.issueSettings?.workspaceRuntime) {
       nextConfig.workspaceRuntime = cloneRecord(input.issueSettings.workspaceRuntime) ?? undefined;
     } else if (input.projectPolicy?.workspaceRuntime) {
       nextConfig.workspaceRuntime = cloneRecord(input.projectPolicy.workspaceRuntime) ?? undefined;

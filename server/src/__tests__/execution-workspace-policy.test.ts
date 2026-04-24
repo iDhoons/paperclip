@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyBranchWorktreeIsolationDefault,
   buildExecutionWorkspaceAdapterConfig,
   defaultIssueExecutionWorkspaceSettingsForProject,
   gateProjectExecutionWorkspacePolicy,
@@ -32,6 +33,20 @@ describe("execution workspace policy helpers", () => {
         projectPolicy: { enabled: true, defaultMode: "shared_workspace" },
         issueSettings: { mode: "isolated_workspace" },
         legacyUseProjectWorkspace: false,
+      }),
+    ).toBe("isolated_workspace");
+  });
+
+  it("enforces project default mode when issue overrides are disabled", () => {
+    expect(
+      resolveExecutionWorkspaceMode({
+        projectPolicy: {
+          enabled: true,
+          defaultMode: "isolated_workspace",
+          allowIssueOverride: false,
+        },
+        issueSettings: { mode: "shared_workspace" },
+        legacyUseProjectWorkspace: null,
       }),
     ).toBe("isolated_workspace");
   });
@@ -112,6 +127,35 @@ describe("execution workspace policy helpers", () => {
     expect(agentDefault.workspaceRuntime).toBeUndefined();
   });
 
+  it("ignores issue workspace strategy overrides when project policy disallows overrides", () => {
+    const result = buildExecutionWorkspaceAdapterConfig({
+      agentConfig: {},
+      projectPolicy: {
+        enabled: true,
+        defaultMode: "isolated_workspace",
+        allowIssueOverride: false,
+        workspaceStrategy: {
+          type: "git_worktree",
+          branchTemplate: "project/{{issue.identifier}}",
+        },
+      },
+      issueSettings: {
+        mode: "isolated_workspace",
+        workspaceStrategy: {
+          type: "git_worktree",
+          branchTemplate: "issue/{{issue.identifier}}",
+        },
+      },
+      mode: "isolated_workspace",
+      legacyUseProjectWorkspace: null,
+    });
+
+    expect(result.workspaceStrategy).toEqual({
+      type: "git_worktree",
+      branchTemplate: "project/{{issue.identifier}}",
+    });
+  });
+
   it("parses persisted JSON payloads into typed project and issue workspace settings", () => {
     expect(
       parseProjectExecutionWorkspacePolicy({
@@ -166,5 +210,18 @@ describe("execution workspace policy helpers", () => {
         true,
       ),
     ).toEqual({ enabled: true, defaultMode: "isolated_workspace" });
+  });
+
+  it("can synthesize the branch-scoped worktree policy used by local agent runs", () => {
+    expect(applyBranchWorktreeIsolationDefault(null, true)).toEqual({
+      enabled: true,
+      defaultMode: "isolated_workspace",
+      allowIssueOverride: false,
+      workspaceStrategy: {
+        type: "git_worktree",
+        branchTemplate: "{{issue.identifier}}-{{slug}}",
+        worktreeParentDir: ".paperclip/worktrees",
+      },
+    });
   });
 });

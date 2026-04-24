@@ -14,6 +14,7 @@ export const patchInstanceGeneralSettingsSchema = instanceGeneralSettingsSchema.
 
 export const instanceExperimentalSettingsSchema = z.object({
   enableIsolatedWorkspaces: z.boolean().default(false),
+  enforceBranchWorktreeIsolation: z.boolean().default(true),
   autoRestartDevServerWhenIdle: z.boolean().default(false),
 }).strict();
 

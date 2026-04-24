@@ -35,11 +35,13 @@ import { resolveDefaultAgentWorkspaceDir, resolveManagedProjectWorkspaceDir } fr
 import { buildHeartbeatRunIssueComment, summarizeHeartbeatRunResultJson } from "./heartbeat-run-summary.js";
 import {
   buildWorkspaceReadyComment,
+  assertGitWorktreeOnBranch,
   cleanupExecutionWorkspaceArtifacts,
   ensureRuntimeServicesForRun,
   persistAdapterManagedRuntimeServices,
   realizeExecutionWorkspace,
   releaseRuntimeServicesForRun,
+  resolveGitWorktreeBranchName,
   type ExecutionWorkspaceInput,
   type RealizedExecutionWorkspace,
   sanitizeRuntimeServiceBaseEnv,
@@ -48,6 +50,7 @@ import { issueService } from "./issues.js";
 import { executionWorkspaceService, mergeExecutionWorkspaceConfig } from "./execution-workspaces.js";
 import { workspaceOperationService } from "./workspace-operations.js";
 import {
+  applyBranchWorktreeIsolationDefault,
   buildExecutionWorkspaceAdapterConfig,
   gateProjectExecutionWorkspacePolicy,
   issueExecutionWorkspaceModeForPersistedWorkspace,
@@ -533,7 +536,7 @@ export function resolveRuntimeSessionParamsForWorkspace(input: {
   agentId: string;
   previousSessionParams: Record<string, unknown> | null;
   resolvedWorkspace: ResolvedWorkspaceForRun;
-}) {
+}): { sessionParams: Record<string, unknown> | null; warning: string | null } {
   const { agentId, previousSessionParams, resolvedWorkspace } = input;
   const normalizedPreviousSessionParams = previousSessionParams
     ? { ...previousSessionParams, agentId }
@@ -2306,7 +2309,9 @@ export function heartbeatService(db: Db) {
             issueContext.assigneeAdapterOverrides,
           )
         : null;
-    const isolatedWorkspacesEnabled = (await instanceSettings.getExperimental()).enableIsolatedWorkspaces;
+    const experimentalSettings = await instanceSettings.getExperimental();
+    const isolatedWorkspacesEnabled =
+      experimentalSettings.enableIsolatedWorkspaces || experimentalSettings.enforceBranchWorktreeIsolation;
     const issueExecutionWorkspaceSettings = isolatedWorkspacesEnabled
       ? parseIssueExecutionWorkspaceSettings(issueContext?.executionWorkspaceSettings)
       : null;
@@ -2318,9 +2323,12 @@ export function heartbeatService(db: Db) {
           .from(projects)
           .where(and(eq(projects.id, executionProjectId), eq(projects.companyId, agent.companyId)))
           .then((rows) =>
-            gateProjectExecutionWorkspacePolicy(
-              parseProjectExecutionWorkspacePolicy(rows[0]?.executionWorkspacePolicy),
-              isolatedWorkspacesEnabled,
+            applyBranchWorktreeIsolationDefault(
+              gateProjectExecutionWorkspacePolicy(
+                parseProjectExecutionWorkspacePolicy(rows[0]?.executionWorkspacePolicy),
+                isolatedWorkspacesEnabled,
+              ),
+              experimentalSettings.enforceBranchWorktreeIsolation,
             ))
       : null;
     const taskSession = taskKey
@@ -2385,12 +2393,65 @@ export function heartbeatService(db: Db) {
     } else {
       delete context[PAPERCLIP_WAKE_PAYLOAD_KEY];
     }
-    const existingExecutionWorkspace =
+    const linkedExecutionWorkspace =
       issueRef?.executionWorkspaceId ? await executionWorkspacesSvc.getById(issueRef.executionWorkspaceId) : null;
-    const shouldReuseExisting =
+    const shouldReuseLinkedExecutionWorkspace = Boolean(
       issueRef?.executionWorkspacePreference === "reuse_existing" &&
-      existingExecutionWorkspace &&
-      existingExecutionWorkspace.status !== "archived";
+      linkedExecutionWorkspace &&
+      linkedExecutionWorkspace.status !== "archived",
+    );
+    const baseWorkspaceManagedConfig = buildExecutionWorkspaceAdapterConfig({
+      agentConfig: config,
+      projectPolicy: projectExecutionWorkspacePolicy,
+      issueSettings: issueExecutionWorkspaceSettings,
+      mode: requestedExecutionWorkspaceMode,
+      legacyUseProjectWorkspace: issueAssigneeOverrides?.useProjectWorkspace ?? null,
+    });
+    const branchLookupConfig = issueAssigneeOverrides?.adapterConfig
+      ? { ...baseWorkspaceManagedConfig, ...issueAssigneeOverrides.adapterConfig }
+      : baseWorkspaceManagedConfig;
+    const executionWorkspaceBase = {
+      baseCwd: resolvedWorkspace.cwd,
+      source: resolvedWorkspace.source,
+      projectId: resolvedWorkspace.projectId,
+      workspaceId: resolvedWorkspace.workspaceId,
+      repoUrl: resolvedWorkspace.repoUrl,
+      repoRef: resolvedWorkspace.repoRef,
+    } satisfies ExecutionWorkspaceInput;
+    const desiredBranchName = shouldReuseLinkedExecutionWorkspace
+      ? null
+      : resolveGitWorktreeBranchName({
+          config: branchLookupConfig,
+          issue: issueRef,
+          agent: {
+            id: agent.id,
+            name: agent.name,
+            companyId: agent.companyId,
+          },
+          projectId: executionWorkspaceBase.projectId,
+          repoRef: executionWorkspaceBase.repoRef,
+        });
+    const branchScopedExecutionWorkspaces =
+      desiredBranchName && executionWorkspaceBase.projectId
+        ? await executionWorkspacesSvc.listReusableByBranch(agent.companyId, {
+            projectId: executionWorkspaceBase.projectId,
+            projectWorkspaceId: executionWorkspaceBase.workspaceId,
+            branchName: desiredBranchName,
+          })
+        : [];
+    if (branchScopedExecutionWorkspaces.length > 1) {
+      throw conflict("Multiple active execution workspaces use the same branch", {
+        projectId: executionWorkspaceBase.projectId,
+        projectWorkspaceId: executionWorkspaceBase.workspaceId,
+        branchName: desiredBranchName,
+        executionWorkspaceIds: branchScopedExecutionWorkspaces.map((workspace) => workspace.id),
+      });
+    }
+    const branchScopedExecutionWorkspace = branchScopedExecutionWorkspaces[0] ?? null;
+    const existingExecutionWorkspace = shouldReuseLinkedExecutionWorkspace
+      ? linkedExecutionWorkspace
+      : branchScopedExecutionWorkspace;
+    const shouldReuseExisting = Boolean(existingExecutionWorkspace);
     const persistedExecutionWorkspaceMode = shouldReuseExisting && existingExecutionWorkspace
       ? issueExecutionWorkspaceModeForPersistedWorkspace(existingExecutionWorkspace.mode)
       : null;
@@ -2402,13 +2463,7 @@ export function heartbeatService(db: Db) {
         : requestedExecutionWorkspaceMode;
     const workspaceManagedConfig = shouldReuseExisting
       ? { ...config }
-      : buildExecutionWorkspaceAdapterConfig({
-          agentConfig: config,
-          projectPolicy: projectExecutionWorkspacePolicy,
-          issueSettings: issueExecutionWorkspaceSettings,
-          mode: requestedExecutionWorkspaceMode,
-          legacyUseProjectWorkspace: issueAssigneeOverrides?.useProjectWorkspace ?? null,
-        });
+      : baseWorkspaceManagedConfig;
     const persistedWorkspaceManagedConfig = applyPersistedExecutionWorkspaceConfig({
       config: workspaceManagedConfig,
       workspaceConfig: existingExecutionWorkspace?.config ?? null,
@@ -2433,14 +2488,6 @@ export function heartbeatService(db: Db) {
       heartbeatRunId: run.id,
       executionWorkspaceId: existingExecutionWorkspace?.id ?? null,
     });
-    const executionWorkspaceBase = {
-      baseCwd: resolvedWorkspace.cwd,
-      source: resolvedWorkspace.source,
-      projectId: resolvedWorkspace.projectId,
-      workspaceId: resolvedWorkspace.workspaceId,
-      repoUrl: resolvedWorkspace.repoUrl,
-      repoRef: resolvedWorkspace.repoRef,
-    } satisfies ExecutionWorkspaceInput;
     const reusedExecutionWorkspace = shouldReuseExisting && existingExecutionWorkspace
       ? buildRealizedExecutionWorkspaceFromPersisted({
           base: executionWorkspaceBase,
@@ -2458,6 +2505,12 @@ export function heartbeatService(db: Db) {
           },
           recorder: workspaceOperationRecorder,
         });
+    if (executionWorkspace.strategy === "git_worktree") {
+      await assertGitWorktreeOnBranch({
+        cwd: executionWorkspace.cwd,
+        branchName: executionWorkspace.branchName,
+      });
+    }
     const resolvedProjectId = executionWorkspace.projectId ?? issueRef?.projectId ?? executionProjectId ?? null;
     const resolvedProjectWorkspaceId = issueRef?.projectWorkspaceId ?? resolvedWorkspace.workspaceId ?? null;
     let persistedExecutionWorkspace = null;
@@ -2969,7 +3022,7 @@ export function heartbeatService(db: Db) {
         outcome = "cancelled";
       } else if (adapterResult.timedOut) {
         outcome = "timed_out";
-      } else if ((adapterResult.exitCode ?? 0) === 0 && !adapterResult.errorMessage) {
+      } else if (!adapterResult.errorMessage) {
         outcome = "succeeded";
       } else {
         outcome = "failed";

@@ -273,6 +273,17 @@ eval "$(pnpm paperclipai worktree env)"
 
 For project execution worktrees, Paperclip can also run a project-defined provision command after it creates or reuses an isolated git worktree. Configure this on the project's execution workspace policy (`workspaceStrategy.provisionCommand`). The command runs inside the derived worktree and receives `PAPERCLIP_WORKSPACE_*`, `PAPERCLIP_PROJECT_ID`, `PAPERCLIP_AGENT_ID`, and `PAPERCLIP_ISSUE_*` environment variables so each repo can bootstrap itself however it wants.
 
+## Agent Branch Worktrees
+
+Local agent runs default to a branch-scoped worktree workflow:
+
+- each generated branch maps to one active git worktree for the project workspace
+- follow-up work on the same branch reuses that worktree
+- a different branch creates or selects a different worktree
+- Paperclip verifies the worktree is still checked out to the expected branch before launching the agent
+
+The default branch template is `{{issue.identifier}}-{{slug}}`, and the default worktree parent is `.paperclip/worktrees` under the project repo. Projects can still set `executionWorkspacePolicy.workspaceStrategy` for base ref, branch template, worktree parent, and provision/teardown commands. The instance-level experimental setting `enforceBranchWorktreeIsolation` controls this default; it is enabled by default for local agent safety.
+
 ## Quick Health Checks
 
 In another terminal:

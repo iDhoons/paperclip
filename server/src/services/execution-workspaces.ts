@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import { executionWorkspaces, issues, projects, projectWorkspaces, workspaceRuntimeServices } from "@paperclipai/db";
 import type {
@@ -405,6 +405,39 @@ export function executionWorkspaceService(db: Db) {
       return toExecutionWorkspace(
         row,
         (runtimeServicesByWorkspaceId.get(row.id) ?? []).map(toRuntimeService),
+      );
+    },
+
+    listReusableByBranch: async (
+      companyId: string,
+      filters: {
+        projectId: string;
+        projectWorkspaceId: string | null;
+        branchName: string;
+      },
+    ) => {
+      const conditions = [
+        eq(executionWorkspaces.companyId, companyId),
+        eq(executionWorkspaces.projectId, filters.projectId),
+        filters.projectWorkspaceId
+          ? eq(executionWorkspaces.projectWorkspaceId, filters.projectWorkspaceId)
+          : isNull(executionWorkspaces.projectWorkspaceId),
+        eq(executionWorkspaces.strategyType, "git_worktree"),
+        eq(executionWorkspaces.branchName, filters.branchName),
+        inArray(executionWorkspaces.status, ["active", "idle", "in_review"]),
+      ];
+
+      const rows = await db
+        .select()
+        .from(executionWorkspaces)
+        .where(and(...conditions))
+        .orderBy(desc(executionWorkspaces.lastUsedAt), desc(executionWorkspaces.createdAt));
+      const runtimeServicesByWorkspaceId = await loadEffectiveRuntimeServicesByExecutionWorkspace(db, companyId, rows);
+      return rows.map((row) =>
+        toExecutionWorkspace(
+          row,
+          (runtimeServicesByWorkspaceId.get(row.id) ?? []).map(toRuntimeService),
+        ),
       );
     },
 

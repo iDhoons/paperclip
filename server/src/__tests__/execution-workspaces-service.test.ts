@@ -150,6 +150,68 @@ describeEmbeddedPostgres("executionWorkspaceService.getCloseReadiness", () => {
     await tempDb?.cleanup();
   });
 
+  it("finds the reusable worktree for a project branch", async () => {
+    const companyId = randomUUID();
+    const projectId = randomUUID();
+    const projectWorkspaceId = randomUUID();
+    const reusableWorkspaceId = randomUUID();
+
+    await db.insert(companies).values({
+      id: companyId,
+      name: "Paperclip",
+      issuePrefix: "PAP",
+      requireBoardApprovalForNewAgents: false,
+    });
+    await db.insert(projects).values({
+      id: projectId,
+      companyId,
+      name: "Workspaces",
+      status: "in_progress",
+    });
+    await db.insert(projectWorkspaces).values({
+      id: projectWorkspaceId,
+      companyId,
+      projectId,
+      name: "Primary",
+      sourceType: "local_path",
+      isPrimary: true,
+    });
+    await db.insert(executionWorkspaces).values([
+      {
+        id: reusableWorkspaceId,
+        companyId,
+        projectId,
+        projectWorkspaceId,
+        mode: "isolated_workspace",
+        strategyType: "git_worktree",
+        name: "PAP-1-branch",
+        status: "active",
+        branchName: "PAP-1-branch",
+        providerType: "git_worktree",
+        providerRef: "/tmp/paperclip-worktree",
+      },
+      {
+        companyId,
+        projectId,
+        projectWorkspaceId,
+        mode: "shared_workspace",
+        strategyType: "project_primary",
+        name: "Shared",
+        status: "active",
+        branchName: "PAP-1-branch",
+        providerType: "local_fs",
+      },
+    ]);
+
+    const workspaces = await svc.listReusableByBranch(companyId, {
+      projectId,
+      projectWorkspaceId,
+      branchName: "PAP-1-branch",
+    });
+
+    expect(workspaces.map((workspace) => workspace.id)).toEqual([reusableWorkspaceId]);
+  });
+
   it("allows archiving shared workspace sessions with warnings even when issues are still open", async () => {
     const companyId = randomUUID();
     const projectId = randomUUID();

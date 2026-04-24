@@ -1,6 +1,6 @@
 # Issue worktree support
 
-Status: experimental, runtime-only, not shipping as a user-facing feature yet.
+Status: runtime support is active for local agent runs; the richer project/issue UI remains experimental.
 
 This branch contains the runtime and seeding work needed for issue-scoped worktrees:
 
@@ -11,13 +11,13 @@ This branch contains the runtime and seeding work needed for issue-scoped worktr
 - seeded worktree fixes for secrets key compatibility
 - seeded project workspace rebinding to the current git worktree
 
-We are intentionally not shipping the UI for this yet. The runtime code remains in place, but the main UI entrypoints are hard-gated off for now.
+Local agent execution now defaults to one git worktree per generated branch. The richer UI entrypoints are still gated while the operator workflow is refined.
 
 ## What works today
 
 - projects can carry execution workspace policy in the backend
 - issues can carry execution workspace settings in the backend
-- heartbeat execution can realize isolated git worktrees
+- heartbeat execution can realize and reuse branch-scoped isolated git worktrees
 - runtime can run a project-defined provision command inside the derived worktree
 - seeded worktree instances can keep local-encrypted secrets working
 - seeded worktree instances can rebind same-repo project workspace paths onto the current git worktree

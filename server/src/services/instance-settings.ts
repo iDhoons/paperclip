@@ -36,11 +36,13 @@ function normalizeExperimentalSettings(raw: unknown): InstanceExperimentalSettin
   if (parsed.success) {
     return {
       enableIsolatedWorkspaces: parsed.data.enableIsolatedWorkspaces ?? false,
+      enforceBranchWorktreeIsolation: parsed.data.enforceBranchWorktreeIsolation ?? true,
       autoRestartDevServerWhenIdle: parsed.data.autoRestartDevServerWhenIdle ?? false,
     };
   }
   return {
     enableIsolatedWorkspaces: false,
+    enforceBranchWorktreeIsolation: true,
     autoRestartDevServerWhenIdle: false,
   };
 }

@@ -24,7 +24,11 @@ export function InstanceExperimentalSettings() {
   });
 
   const toggleMutation = useMutation({
-    mutationFn: async (patch: { enableIsolatedWorkspaces?: boolean; autoRestartDevServerWhenIdle?: boolean }) =>
+    mutationFn: async (patch: {
+      enableIsolatedWorkspaces?: boolean;
+      enforceBranchWorktreeIsolation?: boolean;
+      autoRestartDevServerWhenIdle?: boolean;
+    }) =>
       instanceSettingsApi.updateExperimental(patch),
     onSuccess: async () => {
       setActionError(null);
@@ -53,6 +57,7 @@ export function InstanceExperimentalSettings() {
   }
 
   const enableIsolatedWorkspaces = experimentalQuery.data?.enableIsolatedWorkspaces === true;
+  const enforceBranchWorktreeIsolation = experimentalQuery.data?.enforceBranchWorktreeIsolation !== false;
   const autoRestartDevServerWhenIdle = experimentalQuery.data?.autoRestartDevServerWhenIdle === true;
 
   return (
@@ -87,6 +92,26 @@ export function InstanceExperimentalSettings() {
             onCheckedChange={() => toggleMutation.mutate({ enableIsolatedWorkspaces: !enableIsolatedWorkspaces })}
             disabled={toggleMutation.isPending}
             aria-label="Toggle isolated workspaces experimental setting"
+          />
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1.5">
+            <h2 className="text-sm font-semibold">One Worktree Per Branch</h2>
+            <p className="max-w-2xl text-sm text-muted-foreground">
+              Run local agents in an isolated git worktree by default and reuse the same worktree only for the same
+              branch.
+            </p>
+          </div>
+          <ToggleSwitch
+            checked={enforceBranchWorktreeIsolation}
+            onCheckedChange={() =>
+              toggleMutation.mutate({ enforceBranchWorktreeIsolation: !enforceBranchWorktreeIsolation })
+            }
+            disabled={toggleMutation.isPending}
+            aria-label="Toggle one worktree per branch"
           />
         </div>
       </section>

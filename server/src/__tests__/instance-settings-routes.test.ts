@@ -40,6 +40,7 @@ describe("instance settings routes", () => {
     });
     mockInstanceSettingsService.getExperimental.mockResolvedValue({
       enableIsolatedWorkspaces: false,
+      enforceBranchWorktreeIsolation: true,
       autoRestartDevServerWhenIdle: false,
     });
     mockInstanceSettingsService.updateGeneral.mockResolvedValue({
@@ -54,6 +55,7 @@ describe("instance settings routes", () => {
       id: "instance-settings-1",
       experimental: {
         enableIsolatedWorkspaces: true,
+        enforceBranchWorktreeIsolation: true,
         autoRestartDevServerWhenIdle: false,
       },
     });
@@ -72,6 +74,7 @@ describe("instance settings routes", () => {
     expect(getRes.status).toBe(200);
     expect(getRes.body).toEqual({
       enableIsolatedWorkspaces: false,
+      enforceBranchWorktreeIsolation: true,
       autoRestartDevServerWhenIdle: false,
     });
 
@@ -101,6 +104,24 @@ describe("instance settings routes", () => {
 
     expect(mockInstanceSettingsService.updateExperimental).toHaveBeenCalledWith({
       autoRestartDevServerWhenIdle: true,
+    });
+  });
+
+  it("allows local board users to update branch worktree isolation", async () => {
+    const app = createApp({
+      type: "board",
+      userId: "local-board",
+      source: "local_implicit",
+      isInstanceAdmin: true,
+    });
+
+    await request(app)
+      .patch("/api/instance/settings/experimental")
+      .send({ enforceBranchWorktreeIsolation: false })
+      .expect(200);
+
+    expect(mockInstanceSettingsService.updateExperimental).toHaveBeenCalledWith({
+      enforceBranchWorktreeIsolation: false,
     });
   });
 

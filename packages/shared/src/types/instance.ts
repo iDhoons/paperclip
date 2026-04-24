@@ -8,6 +8,7 @@ export interface InstanceGeneralSettings {
 
 export interface InstanceExperimentalSettings {
   enableIsolatedWorkspaces: boolean;
+  enforceBranchWorktreeIsolation: boolean;
   autoRestartDevServerWhenIdle: boolean;
 }
 
