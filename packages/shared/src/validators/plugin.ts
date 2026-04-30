@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   PLUGIN_STATUSES,
+  PLUGIN_JOB_STATUSES,
   PLUGIN_CATEGORIES,
   PLUGIN_CAPABILITIES,
   PLUGIN_UI_SLOT_TYPES,
@@ -569,6 +570,132 @@ export const installPluginSchema = z.object({
 });
 
 export type InstallPlugin = z.infer<typeof installPluginSchema>;
+
+const pluginRouteIdSchema = z.string().trim().min(1);
+const pluginRouteKeySchema = z.string().trim().min(1);
+const optionalPluginBodySchema = z.object({}).default({});
+const integerStringInRange = (min: number, max: number) =>
+  z.string().regex(/^\d+$/).refine((value) => {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed >= min && parsed <= max;
+  }, `Must be an integer between ${min} and ${max}`);
+
+export const pluginIdParamsSchema = z.object({
+  pluginId: pluginRouteIdSchema,
+});
+
+export const pluginKeyParamsSchema = pluginIdParamsSchema.extend({
+  key: pluginRouteKeySchema,
+});
+
+export const pluginStreamParamsSchema = pluginIdParamsSchema.extend({
+  channel: pluginRouteKeySchema,
+});
+
+export const pluginJobParamsSchema = pluginIdParamsSchema.extend({
+  jobId: pluginRouteIdSchema,
+});
+
+export const pluginWebhookParamsSchema = pluginIdParamsSchema.extend({
+  endpointKey: pluginRouteKeySchema,
+});
+
+export const listPluginsQuerySchema = z.object({
+  status: z.enum(PLUGIN_STATUSES).optional(),
+});
+
+export const listPluginToolsQuerySchema = z.object({
+  pluginId: pluginRouteIdSchema.optional(),
+});
+
+export const pluginStreamQuerySchema = z.object({
+  companyId: pluginRouteIdSchema,
+});
+
+export const uninstallPluginQuerySchema = z.object({
+  purge: z.enum(["true", "false"]).optional(),
+});
+
+export const pluginLogsQuerySchema = z.object({
+  limit: integerStringInRange(1, 500).optional(),
+  level: z.enum(["info", "warn", "error", "debug"]).optional(),
+  since: z.string().datetime().optional(),
+});
+
+export const listPluginJobsQuerySchema = z.object({
+  status: z.enum(PLUGIN_JOB_STATUSES).optional(),
+});
+
+export const listPluginJobRunsQuerySchema = z.object({
+  limit: integerStringInRange(1, 500).optional(),
+});
+
+export const pluginInstallRequestSchema = installPluginSchema
+  .pick({
+    packageName: true,
+    version: true,
+  })
+  .extend({
+    packageName: z.string().trim().min(1),
+    version: z.string().trim().min(1).optional(),
+    isLocalPath: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.isLocalPath && /[<>:"|?*]/.test(value.packageName)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["packageName"],
+        message: "packageName contains invalid characters",
+      });
+    }
+  });
+
+export const pluginToolRunContextSchema = z.object({
+  agentId: pluginRouteIdSchema,
+  runId: pluginRouteIdSchema,
+  companyId: pluginRouteIdSchema,
+  projectId: pluginRouteIdSchema,
+});
+
+export const pluginToolExecuteRequestSchema = z.object({
+  tool: z.string().trim().min(1),
+  parameters: z.unknown().optional(),
+  runContext: pluginToolRunContextSchema,
+});
+
+const pluginBridgeBaseRequestSchema = z.object({
+  companyId: pluginRouteIdSchema.optional(),
+  params: z.record(z.unknown()).optional(),
+  renderEnvironment: z.unknown().nullable().optional(),
+});
+
+export const pluginBridgeDataRequestSchema = pluginBridgeBaseRequestSchema.extend({
+  key: pluginRouteKeySchema,
+});
+
+export const pluginBridgeActionRequestSchema = pluginBridgeBaseRequestSchema.extend({
+  key: pluginRouteKeySchema,
+});
+
+export const pluginBridgeKeyedRequestSchema = pluginBridgeBaseRequestSchema.default({});
+
+export const pluginDisableRequestSchema = z.object({
+  reason: z.string().trim().min(1).optional(),
+}).default({});
+
+export const pluginUpgradeRequestSchema = z.object({
+  version: z.string().trim().min(1).optional(),
+}).default({});
+
+export const pluginEmptyRequestSchema = optionalPluginBodySchema;
+
+export type PluginInstallRequestInput = z.infer<typeof pluginInstallRequestSchema>;
+export type PluginToolExecuteRequestInput = z.infer<typeof pluginToolExecuteRequestSchema>;
+export type PluginBridgeDataRequestInput = z.infer<typeof pluginBridgeDataRequestSchema>;
+export type PluginBridgeActionRequestInput = z.infer<typeof pluginBridgeActionRequestSchema>;
+export type PluginBridgeKeyedRequestInput = z.infer<typeof pluginBridgeKeyedRequestSchema>;
+export type PluginDisableRequestInput = z.infer<typeof pluginDisableRequestSchema>;
+export type PluginUpgradeRequestInput = z.infer<typeof pluginUpgradeRequestSchema>;
 
 // ---------------------------------------------------------------------------
 // Plugin config (instance configuration) schemas

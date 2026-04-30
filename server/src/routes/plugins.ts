@@ -33,11 +33,30 @@ import type {
   PluginLauncherRenderContextSnapshot,
 } from "@paperclipai/shared";
 import {
-  PLUGIN_STATUSES,
+  listPluginJobRunsQuerySchema,
+  listPluginJobsQuerySchema,
+  listPluginsQuerySchema,
+  listPluginToolsQuerySchema,
+  pluginBridgeActionRequestSchema,
+  pluginBridgeDataRequestSchema,
+  pluginBridgeKeyedRequestSchema,
+  pluginDisableRequestSchema,
+  pluginInstallRequestSchema,
+  pluginIdParamsSchema,
+  pluginJobParamsSchema,
+  pluginKeyParamsSchema,
+  pluginLogsQuerySchema,
+  pluginStreamParamsSchema,
+  pluginStreamQuerySchema,
+  pluginToolExecuteRequestSchema,
+  pluginUpgradeRequestSchema,
+  pluginWebhookParamsSchema,
+  uninstallPluginQuerySchema,
+  upsertPluginConfigSchema,
 } from "@paperclipai/shared";
 import { pluginRegistryService } from "../services/plugin-registry.js";
 import { pluginLifecycleManager } from "../services/plugin-lifecycle.js";
-import { getPluginUiContributionMetadata, pluginLoader } from "../services/plugin-loader.js";
+import { getPluginUiContributionMetadata, type pluginLoader } from "../services/plugin-loader.js";
 import { logActivity } from "../services/activity-log.js";
 import { publishGlobalLiveEvent } from "../services/live-events.js";
 import type { PluginJobScheduler } from "../services/plugin-job-scheduler.js";
@@ -48,6 +67,7 @@ import type { PluginToolDispatcher } from "../services/plugin-tool-dispatcher.js
 import type { ToolRunContext } from "@paperclipai/plugin-sdk";
 import { JsonRpcCallError, PLUGIN_RPC_ERROR_CODES } from "@paperclipai/plugin-sdk";
 import { assertBoard, assertCompanyAccess, getActorInfo } from "./authz.js";
+import { validate, validateParams, validateQuery } from "../middleware/index.js";
 import { validateInstanceConfig } from "../services/plugin-config-validator.js";
 
 /** UI slot declaration extracted from plugin manifest */
@@ -113,6 +133,26 @@ const UUID_REGEX =
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../../..");
+
+function readPluginIdParams(req: Request): { pluginId: string } {
+  return req.params as { pluginId: string };
+}
+
+function readPluginKeyParams(req: Request): { pluginId: string; key: string } {
+  return req.params as { pluginId: string; key: string };
+}
+
+function readPluginStreamParams(req: Request): { pluginId: string; channel: string } {
+  return req.params as { pluginId: string; channel: string };
+}
+
+function readPluginJobParams(req: Request): { pluginId: string; jobId: string } {
+  return req.params as { pluginId: string; jobId: string };
+}
+
+function readPluginWebhookParams(req: Request): { pluginId: string; endpointKey: string } {
+  return req.params as { pluginId: string; endpointKey: string };
+}
 
 const BUNDLED_PLUGIN_EXAMPLES: AvailablePluginExample[] = [
   {
@@ -370,18 +410,9 @@ export function pluginRoutes(
    *
    * Response: `PluginRecord[]`
    */
-  router.get("/plugins", async (req, res) => {
+  router.get("/plugins", validateQuery(listPluginsQuerySchema), async (req, res) => {
     assertBoard(req);
-    const rawStatus = req.query.status;
-    if (rawStatus !== undefined) {
-      if (typeof rawStatus !== "string" || !(PLUGIN_STATUSES as readonly string[]).includes(rawStatus)) {
-        res.status(400).json({
-          error: `Invalid status '${String(rawStatus)}'. Must be one of: ${PLUGIN_STATUSES.join(", ")}`,
-        });
-        return;
-      }
-    }
-    const status = rawStatus as PluginStatus | undefined;
+    const status = req.query.status as PluginStatus | undefined;
     const plugins = status
       ? await registry.listByStatus(status)
       : await registry.listInstalled();
@@ -482,7 +513,7 @@ export function pluginRoutes(
    * Response: `AgentToolDescriptor[]`
    * Errors: 501 if tool dispatcher is not configured
    */
-  router.get("/plugins/tools", async (req, res) => {
+  router.get("/plugins/tools", validateQuery(listPluginToolsQuerySchema), async (req, res) => {
     assertBoard(req);
 
     if (!toolDeps) {
@@ -516,7 +547,7 @@ export function pluginRoutes(
    * - 501 if tool dispatcher is not configured
    * - 502 if the plugin worker is unavailable or the RPC call fails
    */
-  router.post("/plugins/tools/execute", async (req, res) => {
+  router.post("/plugins/tools/execute", validate(pluginToolExecuteRequestSchema), async (req, res) => {
     assertBoard(req);
 
     if (!toolDeps) {
@@ -524,31 +555,8 @@ export function pluginRoutes(
       return;
     }
 
-    const body = (req.body as PluginToolExecuteRequest | undefined);
-    if (!body) {
-      res.status(400).json({ error: "Request body is required" });
-      return;
-    }
-
+    const body = req.body as PluginToolExecuteRequest;
     const { tool, parameters, runContext } = body;
-
-    // Validate required fields
-    if (!tool || typeof tool !== "string") {
-      res.status(400).json({ error: '"tool" is required and must be a string' });
-      return;
-    }
-
-    if (!runContext || typeof runContext !== "object") {
-      res.status(400).json({ error: '"runContext" is required and must be an object' });
-      return;
-    }
-
-    if (!runContext.agentId || !runContext.runId || !runContext.companyId || !runContext.projectId) {
-      res.status(400).json({
-        error: '"runContext" must include agentId, runId, companyId, and projectId',
-      });
-      return;
-    }
 
     assertCompanyAccess(req, runContext.companyId);
 
@@ -600,38 +608,10 @@ export function pluginRoutes(
    * - `400` — validation failure or install error (package not found, bad manifest, etc.)
    * - `500` — installation succeeded but manifest is missing (indicates a loader bug)
    */
-  router.post("/plugins/install", async (req, res) => {
+  router.post("/plugins/install", validate(pluginInstallRequestSchema), async (req, res) => {
     assertBoard(req);
     const { packageName, version, isLocalPath } = req.body as PluginInstallRequest;
-
-    // Input validation
-    if (!packageName || typeof packageName !== "string") {
-      res.status(400).json({ error: "packageName is required and must be a string" });
-      return;
-    }
-
-    if (version !== undefined && typeof version !== "string") {
-      res.status(400).json({ error: "version must be a string if provided" });
-      return;
-    }
-
-    if (isLocalPath !== undefined && typeof isLocalPath !== "boolean") {
-      res.status(400).json({ error: "isLocalPath must be a boolean if provided" });
-      return;
-    }
-
-    // Validate package name format
     const trimmedPackage = packageName.trim();
-    if (trimmedPackage.length === 0) {
-      res.status(400).json({ error: "packageName cannot be empty" });
-      return;
-    }
-
-    // Basic security check for package name (prevent injection)
-    if (!isLocalPath && /[<>:"|?*]/.test(trimmedPackage)) {
-      res.status(400).json({ error: "packageName contains invalid characters" });
-      return;
-    }
 
     try {
       const installOptions = isLocalPath
@@ -792,7 +772,11 @@ export function pluginRoutes(
    * @see PLUGIN_SPEC.md §13.8 — `getData`
    * @see PLUGIN_SPEC.md §19.7 — Error Propagation Through The Bridge
    */
-  router.post("/plugins/:pluginId/bridge/data", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/bridge/data",
+    validateParams(pluginIdParamsSchema),
+    validate(pluginBridgeDataRequestSchema),
+    async (req, res) => {
     assertBoard(req);
 
     if (!bridgeDeps) {
@@ -800,7 +784,7 @@ export function pluginRoutes(
       return;
     }
 
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     // Resolve plugin
     const plugin = await resolvePlugin(registry, pluginId);
@@ -821,7 +805,7 @@ export function pluginRoutes(
 
     // Validate request body
     const body = req.body as PluginBridgeDataRequest | undefined;
-    if (!body || !body.key || typeof body.key !== "string") {
+    if (!body?.key || typeof body.key !== "string") {
       res.status(400).json({ error: '"key" is required and must be a string' });
       return;
     }
@@ -845,7 +829,8 @@ export function pluginRoutes(
       const bridgeError = mapRpcErrorToBridgeError(err);
       res.status(502).json(bridgeError);
     }
-  });
+    },
+  );
 
   /**
    * POST /api/plugins/:pluginId/bridge/action
@@ -875,7 +860,11 @@ export function pluginRoutes(
    * @see PLUGIN_SPEC.md §13.9 — `performAction`
    * @see PLUGIN_SPEC.md §19.7 — Error Propagation Through The Bridge
    */
-  router.post("/plugins/:pluginId/bridge/action", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/bridge/action",
+    validateParams(pluginIdParamsSchema),
+    validate(pluginBridgeActionRequestSchema),
+    async (req, res) => {
     assertBoard(req);
 
     if (!bridgeDeps) {
@@ -883,7 +872,7 @@ export function pluginRoutes(
       return;
     }
 
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     // Resolve plugin
     const plugin = await resolvePlugin(registry, pluginId);
@@ -904,7 +893,7 @@ export function pluginRoutes(
 
     // Validate request body
     const body = req.body as PluginBridgeActionRequest | undefined;
-    if (!body || !body.key || typeof body.key !== "string") {
+    if (!body?.key || typeof body.key !== "string") {
       res.status(400).json({ error: '"key" is required and must be a string' });
       return;
     }
@@ -928,7 +917,8 @@ export function pluginRoutes(
       const bridgeError = mapRpcErrorToBridgeError(err);
       res.status(502).json(bridgeError);
     }
-  });
+    },
+  );
 
   // ===========================================================================
   // URL-keyed bridge routes (key as path parameter)
@@ -959,7 +949,11 @@ export function pluginRoutes(
    * @see PLUGIN_SPEC.md §13.8 — `getData`
    * @see PLUGIN_SPEC.md §19.7 — Error Propagation Through The Bridge
    */
-  router.post("/plugins/:pluginId/data/:key", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/data/:key",
+    validateParams(pluginKeyParamsSchema),
+    validate(pluginBridgeKeyedRequestSchema),
+    async (req, res) => {
     assertBoard(req);
 
     if (!bridgeDeps) {
@@ -967,7 +961,7 @@ export function pluginRoutes(
       return;
     }
 
-    const { pluginId, key } = req.params;
+    const { pluginId, key } = readPluginKeyParams(req);
 
     // Resolve plugin
     const plugin = await resolvePlugin(registry, pluginId);
@@ -1011,7 +1005,8 @@ export function pluginRoutes(
       const bridgeError = mapRpcErrorToBridgeError(err);
       res.status(502).json(bridgeError);
     }
-  });
+    },
+  );
 
   /**
    * POST /api/plugins/:pluginId/actions/:key
@@ -1038,7 +1033,11 @@ export function pluginRoutes(
    * @see PLUGIN_SPEC.md §13.9 — `performAction`
    * @see PLUGIN_SPEC.md §19.7 — Error Propagation Through The Bridge
    */
-  router.post("/plugins/:pluginId/actions/:key", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/actions/:key",
+    validateParams(pluginKeyParamsSchema),
+    validate(pluginBridgeKeyedRequestSchema),
+    async (req, res) => {
     assertBoard(req);
 
     if (!bridgeDeps) {
@@ -1046,7 +1045,7 @@ export function pluginRoutes(
       return;
     }
 
-    const { pluginId, key } = req.params;
+    const { pluginId, key } = readPluginKeyParams(req);
 
     // Resolve plugin
     const plugin = await resolvePlugin(registry, pluginId);
@@ -1090,7 +1089,8 @@ export function pluginRoutes(
       const bridgeError = mapRpcErrorToBridgeError(err);
       res.status(502).json(bridgeError);
     }
-  });
+    },
+  );
 
   // ===========================================================================
   // SSE stream bridge route
@@ -1119,7 +1119,11 @@ export function pluginRoutes(
    * - 404 if plugin not found
    * - 501 if bridge deps or stream bus are not configured
    */
-  router.get("/plugins/:pluginId/bridge/stream/:channel", async (req, res) => {
+  router.get(
+    "/plugins/:pluginId/bridge/stream/:channel",
+    validateParams(pluginStreamParamsSchema),
+    validateQuery(pluginStreamQuerySchema),
+    async (req, res) => {
     assertBoard(req);
 
     if (!bridgeDeps?.streamBus) {
@@ -1127,7 +1131,7 @@ export function pluginRoutes(
       return;
     }
 
-    const { pluginId, channel } = req.params;
+    const { pluginId, channel } = readPluginStreamParams(req);
     const companyId = req.query.companyId as string | undefined;
 
     if (!companyId) {
@@ -1183,7 +1187,8 @@ export function pluginRoutes(
 
     req.on("close", safeUnsubscribe);
     res.on("error", safeUnsubscribe);
-  });
+    },
+  );
 
   /**
    * GET /api/plugins/:pluginId
@@ -1197,9 +1202,9 @@ export function pluginRoutes(
    * Response: PluginRecord
    * Errors: 404 if plugin not found
    */
-  router.get("/plugins/:pluginId", async (req, res) => {
+  router.get("/plugins/:pluginId", validateParams(pluginIdParamsSchema), async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
       res.status(404).json({ error: "Plugin not found" });
@@ -1227,9 +1232,13 @@ export function pluginRoutes(
    * Response: PluginRecord (the deleted record)
    * Errors: 404 if plugin not found, 400 for lifecycle errors
    */
-  router.delete("/plugins/:pluginId", async (req, res) => {
+  router.delete(
+    "/plugins/:pluginId",
+    validateParams(pluginIdParamsSchema),
+    validateQuery(uninstallPluginQuerySchema),
+    async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
     const purge = req.query.purge === "true";
 
     const plugin = await resolvePlugin(registry, pluginId);
@@ -1251,7 +1260,8 @@ export function pluginRoutes(
       const message = err instanceof Error ? err.message : String(err);
       res.status(400).json({ error: message });
     }
-  });
+    },
+  );
 
   /**
    * POST /api/plugins/:pluginId/enable
@@ -1263,9 +1273,9 @@ export function pluginRoutes(
    * Response: PluginRecord
    * Errors: 404 if plugin not found, 400 for lifecycle errors
    */
-  router.post("/plugins/:pluginId/enable", async (req, res) => {
+  router.post("/plugins/:pluginId/enable", validateParams(pluginIdParamsSchema), async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
@@ -1301,9 +1311,13 @@ export function pluginRoutes(
    * Response: PluginRecord
    * Errors: 404 if plugin not found, 400 for lifecycle errors
    */
-  router.post("/plugins/:pluginId/disable", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/disable",
+    validateParams(pluginIdParamsSchema),
+    validate(pluginDisableRequestSchema),
+    async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
     const body = req.body as { reason?: string } | undefined;
     const reason = body?.reason;
 
@@ -1326,7 +1340,8 @@ export function pluginRoutes(
       const message = err instanceof Error ? err.message : String(err);
       res.status(400).json({ error: message });
     }
-  });
+    },
+  );
 
   /**
    * GET /api/plugins/:pluginId/health
@@ -1342,9 +1357,9 @@ export function pluginRoutes(
    * Response: PluginHealthCheckResult
    * Errors: 404 if plugin not found
    */
-  router.get("/plugins/:pluginId/health", async (req, res) => {
+  router.get("/plugins/:pluginId/health", validateParams(pluginIdParamsSchema), async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
@@ -1410,9 +1425,13 @@ export function pluginRoutes(
    *
    * Response: Array of log entries, newest first.
    */
-  router.get("/plugins/:pluginId/logs", async (req, res) => {
+  router.get(
+    "/plugins/:pluginId/logs",
+    validateParams(pluginIdParamsSchema),
+    validateQuery(pluginLogsQuerySchema),
+    async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
@@ -1430,7 +1449,7 @@ export function pluginRoutes(
     }
     if (since) {
       const sinceDate = new Date(since);
-      if (!isNaN(sinceDate.getTime())) {
+      if (!Number.isNaN(sinceDate.getTime())) {
         conditions.push(gte(pluginLogs.createdAt, sinceDate));
       }
     }
@@ -1443,7 +1462,8 @@ export function pluginRoutes(
       .limit(limit);
 
     res.json(rows);
-  });
+    },
+  );
 
   /**
    * POST /api/plugins/:pluginId/upgrade
@@ -1460,9 +1480,13 @@ export function pluginRoutes(
    * Response: PluginRecord
    * Errors: 404 if plugin not found, 400 for lifecycle errors
    */
-  router.post("/plugins/:pluginId/upgrade", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/upgrade",
+    validateParams(pluginIdParamsSchema),
+    validate(pluginUpgradeRequestSchema),
+    async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
     const body = req.body as { version?: string } | undefined;
     const version = body?.version;
 
@@ -1492,7 +1516,8 @@ export function pluginRoutes(
       const message = err instanceof Error ? err.message : String(err);
       res.status(400).json({ error: message });
     }
-  });
+    },
+  );
 
   // ===========================================================================
   // Plugin configuration routes
@@ -1509,9 +1534,9 @@ export function pluginRoutes(
    * Response: `PluginConfig | null`
    * Errors: 404 if plugin not found
    */
-  router.get("/plugins/:pluginId/config", async (req, res) => {
+  router.get("/plugins/:pluginId/config", validateParams(pluginIdParamsSchema), async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
@@ -1539,9 +1564,13 @@ export function pluginRoutes(
    * - 400 if request validation fails
    * - 404 if plugin not found
    */
-  router.post("/plugins/:pluginId/config", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/config",
+    validateParams(pluginIdParamsSchema),
+    validate(upsertPluginConfigSchema),
+    async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
@@ -1622,7 +1651,8 @@ export function pluginRoutes(
       const message = err instanceof Error ? err.message : String(err);
       res.status(400).json({ error: message });
     }
-  });
+    },
+  );
 
   /**
    * POST /api/plugins/:pluginId/config/test
@@ -1644,7 +1674,11 @@ export function pluginRoutes(
    * - 501 if bridge deps (worker manager) are not configured
    * - 502 if the worker is unavailable
    */
-  router.post("/plugins/:pluginId/config/test", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/config/test",
+    validateParams(pluginIdParamsSchema),
+    validate(upsertPluginConfigSchema),
+    async (req, res) => {
     assertBoard(req);
 
     if (!bridgeDeps) {
@@ -1652,7 +1686,7 @@ export function pluginRoutes(
       return;
     }
 
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
@@ -1724,7 +1758,8 @@ export function pluginRoutes(
       const bridgeError = mapRpcErrorToBridgeError(err);
       res.status(502).json(bridgeError);
     }
-  });
+    },
+  );
 
   // ===========================================================================
   // Job scheduling routes
@@ -1741,14 +1776,18 @@ export function pluginRoutes(
    * Response: PluginJobRecord[]
    * Errors: 404 if plugin not found
    */
-  router.get("/plugins/:pluginId/jobs", async (req, res) => {
+  router.get(
+    "/plugins/:pluginId/jobs",
+    validateParams(pluginIdParamsSchema),
+    validateQuery(listPluginJobsQuerySchema),
+    async (req, res) => {
     assertBoard(req);
     if (!jobDeps) {
       res.status(501).json({ error: "Job scheduling is not enabled" });
       return;
     }
 
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
       res.status(404).json({ error: "Plugin not found" });
@@ -1774,7 +1813,8 @@ export function pluginRoutes(
       const message = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: message });
     }
-  });
+    },
+  );
 
   /**
    * GET /api/plugins/:pluginId/jobs/:jobId/runs
@@ -1787,14 +1827,18 @@ export function pluginRoutes(
    * Response: PluginJobRunRecord[]
    * Errors: 404 if plugin not found
    */
-  router.get("/plugins/:pluginId/jobs/:jobId/runs", async (req, res) => {
+  router.get(
+    "/plugins/:pluginId/jobs/:jobId/runs",
+    validateParams(pluginJobParamsSchema),
+    validateQuery(listPluginJobRunsQuerySchema),
+    async (req, res) => {
     assertBoard(req);
     if (!jobDeps) {
       res.status(501).json({ error: "Job scheduling is not enabled" });
       return;
     }
 
-    const { pluginId, jobId } = req.params;
+    const { pluginId, jobId } = readPluginJobParams(req);
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
       res.status(404).json({ error: "Plugin not found" });
@@ -1808,7 +1852,7 @@ export function pluginRoutes(
     }
 
     const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 25;
-    if (isNaN(limit) || limit < 1 || limit > 500) {
+    if (Number.isNaN(limit) || limit < 1 || limit > 500) {
       res.status(400).json({ error: "limit must be a number between 1 and 500" });
       return;
     }
@@ -1820,7 +1864,8 @@ export function pluginRoutes(
       const message = err instanceof Error ? err.message : String(err);
       res.status(500).json({ error: message });
     }
-  });
+    },
+  );
 
   /**
    * POST /api/plugins/:pluginId/jobs/:jobId/trigger
@@ -1835,14 +1880,17 @@ export function pluginRoutes(
    * - 404 if plugin not found
    * - 400 if job not found, not active, already running, or worker unavailable
    */
-  router.post("/plugins/:pluginId/jobs/:jobId/trigger", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/jobs/:jobId/trigger",
+    validateParams(pluginJobParamsSchema),
+    async (req, res) => {
     assertBoard(req);
     if (!jobDeps) {
       res.status(501).json({ error: "Job scheduling is not enabled" });
       return;
     }
 
-    const { pluginId, jobId } = req.params;
+    const { pluginId, jobId } = readPluginJobParams(req);
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
       res.status(404).json({ error: "Plugin not found" });
@@ -1862,7 +1910,8 @@ export function pluginRoutes(
       const message = err instanceof Error ? err.message : String(err);
       res.status(400).json({ error: message });
     }
-  });
+    },
+  );
 
   // ===========================================================================
   // Webhook ingestion route
@@ -1892,13 +1941,16 @@ export function pluginRoutes(
    * - 400 if plugin is not in ready state or lacks webhooks.receive capability
    * - 502 if the worker is unavailable or the RPC call fails
    */
-  router.post("/plugins/:pluginId/webhooks/:endpointKey", async (req, res) => {
+  router.post(
+    "/plugins/:pluginId/webhooks/:endpointKey",
+    validateParams(pluginWebhookParamsSchema),
+    async (req, res) => {
     if (!webhookDeps) {
       res.status(501).json({ error: "Webhook ingestion is not enabled" });
       return;
     }
 
-    const { pluginId, endpointKey } = req.params;
+    const { pluginId, endpointKey } = readPluginWebhookParams(req);
 
     // Step 1: Resolve the plugin
     const plugin = await resolvePlugin(registry, pluginId);
@@ -2023,7 +2075,8 @@ export function pluginRoutes(
         error: errorMessage,
       });
     }
-  });
+    },
+  );
 
   // ===========================================================================
   // Plugin health dashboard — aggregated diagnostics for the settings page
@@ -2041,9 +2094,9 @@ export function pluginRoutes(
    * Response: PluginDashboardData
    * Errors: 404 if plugin not found
    */
-  router.get("/plugins/:pluginId/dashboard", async (req, res) => {
+  router.get("/plugins/:pluginId/dashboard", validateParams(pluginIdParamsSchema), async (req, res) => {
     assertBoard(req);
-    const { pluginId } = req.params;
+    const { pluginId } = readPluginIdParams(req);
 
     const plugin = await resolvePlugin(registry, pluginId);
     if (!plugin) {
