@@ -21,7 +21,6 @@ import {
   listServerAdapters,
   findServerAdapter,
   findActiveServerAdapter,
-  listEnabledServerAdapters,
   registerServerAdapter,
   unregisterServerAdapter,
   isOverridePaused,
@@ -38,8 +37,15 @@ import {
   setAdapterDisabled,
 } from "../services/adapter-plugin-store.js";
 import type { AdapterPluginRecord } from "../services/adapter-plugin-store.js";
-import type { ServerAdapterModule, AdapterConfigSchema } from "../adapters/types.js";
-import { loadExternalAdapterPackage, getUiParserSource, getOrExtractUiParserSource, reloadExternalAdapter } from "../adapters/plugin-loader.js";
+import type {
+  ServerAdapterModule,
+  AdapterConfigSchema,
+} from "../adapters/types.js";
+import {
+  loadExternalAdapterPackage,
+  getOrExtractUiParserSource,
+  reloadExternalAdapter,
+} from "../adapters/plugin-loader.js";
 import { logger } from "../middleware/logger.js";
 import { assertBoard } from "./authz.js";
 import { BUILTIN_ADAPTER_TYPES } from "../adapters/builtin-adapter-types.js";
@@ -92,7 +98,9 @@ function resolveAdapterPackageDir(record: AdapterPluginRecord): string {
  * Read `version` from the adapter's package.json on disk.
  * This is the source of truth for what is actually installed (npm or local path).
  */
-function readAdapterPackageVersionFromDisk(record: AdapterPluginRecord): string | undefined {
+function readAdapterPackageVersionFromDisk(
+  record: AdapterPluginRecord,
+): string | undefined {
   try {
     const pkgDir = resolveAdapterPackageDir(record);
     const raw = fs.readFileSync(path.join(pkgDir, "package.json"), "utf-8");
@@ -103,8 +111,14 @@ function readAdapterPackageVersionFromDisk(record: AdapterPluginRecord): string 
   }
 }
 
-function buildAdapterInfo(adapter: ServerAdapterModule, externalRecord: AdapterPluginRecord | undefined, disabledSet: Set<string>): AdapterInfo {
-  const fromDisk = externalRecord ? readAdapterPackageVersionFromDisk(externalRecord) : undefined;
+function buildAdapterInfo(
+  adapter: ServerAdapterModule,
+  externalRecord: AdapterPluginRecord | undefined,
+  disabledSet: Set<string>,
+): AdapterInfo {
+  const fromDisk = externalRecord
+    ? readAdapterPackageVersionFromDisk(externalRecord)
+    : undefined;
   return {
     type: adapter.type,
     label: adapter.type, // ServerAdapterModule doesn't have a separate "label" field; type serves as label
@@ -112,8 +126,12 @@ function buildAdapterInfo(adapter: ServerAdapterModule, externalRecord: AdapterP
     modelsCount: (adapter.models ?? []).length,
     loaded: true, // If it's in the registry, it's loaded
     disabled: disabledSet.has(adapter.type),
-    overriddenBuiltin: externalRecord ? BUILTIN_ADAPTER_TYPES.has(adapter.type) : undefined,
-    overridePaused: BUILTIN_ADAPTER_TYPES.has(adapter.type) ? isOverridePaused(adapter.type) : undefined,
+    overriddenBuiltin: externalRecord
+      ? BUILTIN_ADAPTER_TYPES.has(adapter.type)
+      : undefined,
+    overridePaused: BUILTIN_ADAPTER_TYPES.has(adapter.type)
+      ? isOverridePaused(adapter.type)
+      : undefined,
     // Prefer on-disk package.json so the UI reflects bumps without relying on store-only fields.
     version: fromDisk ?? externalRecord?.version,
     packageName: externalRecord?.packageName,
@@ -139,7 +157,10 @@ async function normalizeLocalPath(rawPath: string): Promise<string> {
       const { stdout } = await execFileAsync("wslpath", ["-u", rawPath]);
       return stdout.trim();
     } catch (err) {
-      logger.warn({ err, rawPath }, "wslpath conversion failed; using path as-is");
+      logger.warn(
+        { err, rawPath },
+        "wslpath conversion failed; using path as-is",
+      );
       return rawPath;
     }
   }
@@ -182,9 +203,15 @@ export function adapterRoutes() {
     );
     const disabledSet = new Set(getDisabledAdapterTypes());
 
-    const result: AdapterInfo[] = registeredAdapters.map((adapter) =>
-      buildAdapterInfo(adapter, externalRecords.get(adapter.type), disabledSet),
-    ).sort((a, b) => a.type.localeCompare(b.type));
+    const result: AdapterInfo[] = registeredAdapters
+      .map((adapter) =>
+        buildAdapterInfo(
+          adapter,
+          externalRecords.get(adapter.type),
+          disabledSet,
+        ),
+      )
+      .sort((a, b) => a.type.localeCompare(b.type));
 
     res.json(result);
   });
@@ -202,12 +229,45 @@ export function adapterRoutes() {
   router.post("/adapters/install", async (req, res) => {
     assertBoard(req);
 
-    const { packageName, isLocalPath = false, version } = req.body as AdapterInstallRequest;
+    const {
+      packageName,
+      isLocalPath = false,
+      version,
+    } = req.body as AdapterInstallRequest;
 
     if (!packageName || typeof packageName !== "string") {
-      res.status(400).json({ error: "packageName is required and must be a string." });
+      res
+        .status(400)
+        .json({ error: "packageName is required and must be a string." });
       return;
     }
+
+    // Validate package name format: @scope/name, name, or file: path
+    const npmPackagePattern = /^(@[a-z0-9][-a-z0-9_]*\/)?[a-z0-9][-a-z0-9_.]*$/;
+    const isValidNpmName = npmPackagePattern.test(
+      packageName.split("@")[0] || packageName,
+    );
+    const isValidLocalPath =
+      packageName.startsWith("/") ||
+      packageName.startsWith("./") ||
+      packageName.startsWith("../");
+    if (!isValidNpmName && !isValidLocalPath) {
+      res.status(400).json({
+        error:
+          "Invalid package name format. Expected npm package name or local path.",
+      });
+      return;
+    }
+
+    logger.info(
+      {
+        packageName,
+        isLocalPath,
+        version,
+        actor: req.actor.userId ?? "unknown",
+      },
+      "Adapter install requested",
+    );
 
     // Strip version suffix if the UI sends "pkg@1.2.3" instead of separating it
     // e.g. "@henkey/hermes-paperclip-adapter@0.3.0" → packageName + version
@@ -231,24 +291,37 @@ export function adapterRoutes() {
       if (!isLocalPath) {
         // npm install into the managed directory
         const pluginsDir = getAdapterPluginsDir();
-        const spec = explicitVersion ? `${canonicalName}@${explicitVersion}` : canonicalName;
+        const spec = explicitVersion
+          ? `${canonicalName}@${explicitVersion}`
+          : canonicalName;
 
         logger.info({ spec, pluginsDir }, "Installing adapter package via npm");
 
-        await execFileAsync("npm", ["install", "--no-save", spec], {
-          cwd: pluginsDir,
-          timeout: 120_000,
-        });
+        await execFileAsync(
+          "npm",
+          ["install", "--no-save", "--ignore-scripts", spec],
+          {
+            cwd: pluginsDir,
+            timeout: 120_000,
+          },
+        );
 
         // Read installed version from package.json
         try {
-          const pkgJsonPath = path.join(pluginsDir, "node_modules", canonicalName, "package.json");
+          const pkgJsonPath = path.join(
+            pluginsDir,
+            "node_modules",
+            canonicalName,
+            "package.json",
+          );
           const pkgContent = await import("node:fs/promises");
           const pkgRaw = await pkgContent.readFile(pkgJsonPath, "utf-8");
           const pkg = JSON.parse(pkgRaw);
           const v = pkg.version;
           installedVersion =
-            typeof v === "string" && v.trim().length > 0 ? v.trim() : explicitVersion;
+            typeof v === "string" && v.trim().length > 0
+              ? v.trim()
+              : explicitVersion;
         } catch {
           installedVersion = explicitVersion;
         }
@@ -256,7 +329,10 @@ export function adapterRoutes() {
         // Local path — normalize (e.g., Windows → WSL) and use the resolved path
         moduleLocalPath = path.resolve(await normalizeLocalPath(packageName));
         try {
-          const pkgRaw = await readFile(path.join(moduleLocalPath, "package.json"), "utf-8");
+          const pkgRaw = await readFile(
+            path.join(moduleLocalPath, "package.json"),
+            "utf-8",
+          );
           const v = JSON.parse(pkgRaw).version;
           if (typeof v === "string" && v.trim().length > 0) {
             installedVersion = v.trim();
@@ -267,7 +343,10 @@ export function adapterRoutes() {
       }
 
       // Load and register the adapter (use canonicalName for path resolution)
-      const adapterModule = await loadExternalAdapterPackage(canonicalName, moduleLocalPath);
+      const adapterModule = await loadExternalAdapterPackage(
+        canonicalName,
+        moduleLocalPath,
+      );
 
       // Check if this type conflicts with a built-in adapter
       if (BUILTIN_ADAPTER_TYPES.has(adapterModule.type)) {
@@ -282,7 +361,10 @@ export function adapterRoutes() {
       const isReinstall = existing !== null;
       if (existing) {
         unregisterServerAdapter(adapterModule.type);
-        logger.info({ type: adapterModule.type }, "Unregistered existing adapter for replacement");
+        logger.info(
+          { type: adapterModule.type },
+          "Unregistered existing adapter for replacement",
+        );
       }
 
       // Register the new adapter
@@ -318,7 +400,9 @@ export function adapterRoutes() {
       if (message.includes("npm") || message.includes("ERR!")) {
         res.status(500).json({ error: `npm install failed: ${message}` });
       } else {
-        res.status(500).json({ error: `Failed to install adapter: ${message}` });
+        res
+          .status(500)
+          .json({ error: `Failed to install adapter: ${message}` });
       }
     }
   });
@@ -338,14 +422,18 @@ export function adapterRoutes() {
     const { disabled } = req.body as { disabled?: boolean };
 
     if (typeof disabled !== "boolean") {
-      res.status(400).json({ error: "Request body must include { \"disabled\": true|false }." });
+      res.status(400).json({
+        error: 'Request body must include { "disabled": true|false }.',
+      });
       return;
     }
 
     // Check that the adapter exists in the registry
     const existing = findServerAdapter(adapterType);
     if (!existing) {
-      res.status(404).json({ error: `Adapter "${adapterType}" is not registered.` });
+      res
+        .status(404)
+        .json({ error: `Adapter "${adapterType}" is not registered.` });
       return;
     }
 
@@ -373,18 +461,25 @@ export function adapterRoutes() {
     const { paused } = req.body as { paused?: boolean };
 
     if (typeof paused !== "boolean") {
-      res.status(400).json({ error: "\"paused\" (boolean) is required in request body." });
+      res
+        .status(400)
+        .json({ error: '"paused" (boolean) is required in request body.' });
       return;
     }
 
     if (!BUILTIN_ADAPTER_TYPES.has(adapterType)) {
-      res.status(400).json({ error: `Type "${adapterType}" is not a builtin adapter.` });
+      res
+        .status(400)
+        .json({ error: `Type "${adapterType}" is not a builtin adapter.` });
       return;
     }
 
     const changed = setOverridePaused(adapterType, paused);
 
-    logger.info({ type: adapterType, paused, changed }, "Adapter override toggle");
+    logger.info(
+      { type: adapterType, paused, changed },
+      "Adapter override toggle",
+    );
 
     res.json({ type: adapterType, paused, changed });
   });
@@ -456,7 +551,10 @@ export function adapterRoutes() {
     // Remove from the persistent store
     removeAdapterPlugin(adapterType);
 
-    logger.info({ type: adapterType }, "External adapter unregistered and removed");
+    logger.info(
+      { type: adapterType },
+      "External adapter unregistered and removed",
+    );
 
     res.json({ type: adapterType, removed: true });
   });
@@ -486,7 +584,9 @@ export function adapterRoutes() {
 
       // Not found in the external adapter store
       if (!newModule) {
-        res.status(404).json({ error: `Adapter "${type}" is not an externally installed adapter.` });
+        res.status(404).json({
+          error: `Adapter "${type}" is not an externally installed adapter.`,
+        });
         return;
       }
 
@@ -505,7 +605,10 @@ export function adapterRoutes() {
         }
       }
 
-      logger.info({ type, version: newVersion }, "External adapter reloaded at runtime");
+      logger.info(
+        { type, version: newVersion },
+        "External adapter reloaded at runtime",
+      );
 
       res.json({ type, version: newVersion, reloaded: true });
     } catch (err) {
@@ -533,19 +636,26 @@ export function adapterRoutes() {
 
     const record = getAdapterPluginByType(type);
     if (!record) {
-      res.status(404).json({ error: `Adapter "${type}" is not an externally installed adapter.` });
+      res.status(404).json({
+        error: `Adapter "${type}" is not an externally installed adapter.`,
+      });
       return;
     }
 
     if (record.localPath) {
-      res.status(400).json({ error: "Local-path adapters cannot be reinstalled. Use Reload instead." });
+      res.status(400).json({
+        error: "Local-path adapters cannot be reinstalled. Use Reload instead.",
+      });
       return;
     }
 
     try {
       const pluginsDir = getAdapterPluginsDir();
 
-      logger.info({ type, packageName: record.packageName }, "Reinstalling adapter package via npm");
+      logger.info(
+        { type, packageName: record.packageName },
+        "Reinstalling adapter package via npm",
+      );
 
       await execFileAsync("npm", ["install", "--no-save", record.packageName], {
         cwd: pluginsDir,
@@ -555,7 +665,9 @@ export function adapterRoutes() {
       // Reload the freshly installed adapter
       const newModule = await reloadExternalAdapter(type);
       if (!newModule) {
-        res.status(500).json({ error: "npm install succeeded but adapter reload failed." });
+        res
+          .status(500)
+          .json({ error: "npm install succeeded but adapter reload failed." });
         return;
       }
 
@@ -573,7 +685,10 @@ export function adapterRoutes() {
         }
       }
 
-      logger.info({ type, version: newVersion }, "Adapter reinstalled from npm");
+      logger.info(
+        { type, version: newVersion },
+        "Adapter reinstalled from npm",
+      );
 
       res.json({ type, version: newVersion, reinstalled: true });
     } catch (err) {
@@ -587,7 +702,10 @@ export function adapterRoutes() {
   // Serve a declarative config schema for an adapter's UI form fields.
   // The adapter's getConfigSchema() resolves all options (static and dynamic)
   // so the UI receives a fully hydrated schema in a single fetch.
-  const configSchemaCache = new Map<string, { schema: AdapterConfigSchema; fetchedAt: number }>();
+  const configSchemaCache = new Map<
+    string,
+    { schema: AdapterConfigSchema; fetchedAt: number }
+  >();
   const CONFIG_SCHEMA_TTL_MS = 30_000;
 
   router.get("/adapters/:type/config-schema", async (req, res) => {
@@ -600,7 +718,9 @@ export function adapterRoutes() {
       return;
     }
     if (!adapter.getConfigSchema) {
-      res.status(404).json({ error: `Adapter "${type}" does not provide a config schema.` });
+      res
+        .status(404)
+        .json({ error: `Adapter "${type}" does not provide a config schema.` });
       return;
     }
 
@@ -617,7 +737,9 @@ export function adapterRoutes() {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       logger.error({ err, type }, "Failed to resolve config schema");
-      res.status(500).json({ error: `Failed to resolve config schema: ${message}` });
+      res
+        .status(500)
+        .json({ error: `Failed to resolve config schema: ${message}` });
     }
   });
 
@@ -633,7 +755,9 @@ export function adapterRoutes() {
     const { type } = req.params;
     const source = getOrExtractUiParserSource(type);
     if (!source) {
-      res.status(404).json({ error: `No UI parser available for adapter "${type}".` });
+      res
+        .status(404)
+        .json({ error: `No UI parser available for adapter "${type}".` });
       return;
     }
     res.type("application/javascript").send(source);

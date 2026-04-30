@@ -10,6 +10,7 @@ import {
   authUsers,
   authVerifications,
 } from "@paperclipai/db";
+import { logger } from "../middleware/logger.js";
 import type { Config } from "../config.js";
 
 export type BetterAuthSessionUser = {
@@ -43,7 +44,10 @@ function headersFromExpressRequest(req: Request): Headers {
 }
 
 export function deriveAuthTrustedOrigins(config: Config): string[] {
-  const baseUrl = config.authBaseUrlMode === "explicit" ? config.authPublicBaseUrl : undefined;
+  const baseUrl =
+    config.authBaseUrlMode === "explicit"
+      ? config.authPublicBaseUrl
+      : undefined;
   const trustedOrigins = new Set<string>();
 
   if (baseUrl) {
@@ -65,10 +69,30 @@ export function deriveAuthTrustedOrigins(config: Config): string[] {
   return Array.from(trustedOrigins);
 }
 
-export function createBetterAuthInstance(db: Db, config: Config, trustedOrigins?: string[]): BetterAuthInstance {
-  const baseUrl = config.authBaseUrlMode === "explicit" ? config.authPublicBaseUrl : undefined;
-  const secret = process.env.BETTER_AUTH_SECRET ?? process.env.PAPERCLIP_AGENT_JWT_SECRET ?? "paperclip-dev-secret";
-  const effectiveTrustedOrigins = trustedOrigins ?? deriveAuthTrustedOrigins(config);
+export function createBetterAuthInstance(
+  db: Db,
+  config: Config,
+  trustedOrigins?: string[],
+): BetterAuthInstance {
+  const baseUrl =
+    config.authBaseUrlMode === "explicit"
+      ? config.authPublicBaseUrl
+      : undefined;
+  const envSecret =
+    process.env.BETTER_AUTH_SECRET ?? process.env.PAPERCLIP_AGENT_JWT_SECRET;
+  if (!envSecret && process.env.NODE_ENV === "production") {
+    throw new Error(
+      "BETTER_AUTH_SECRET (or PAPERCLIP_AGENT_JWT_SECRET) is required in production",
+    );
+  }
+  const secret = envSecret ?? crypto.randomUUID();
+  if (!envSecret) {
+    logger.warn(
+      "No BETTER_AUTH_SECRET set — using random secret (sessions will not survive restart)",
+    );
+  }
+  const effectiveTrustedOrigins =
+    trustedOrigins ?? deriveAuthTrustedOrigins(config);
 
   const publicUrl = process.env.PAPERCLIP_PUBLIC_URL ?? baseUrl;
   const isHttpOnly = publicUrl ? publicUrl.startsWith("http://") : false;
@@ -101,7 +125,9 @@ export function createBetterAuthInstance(db: Db, config: Config, trustedOrigins?
   return betterAuth(authConfig);
 }
 
-export function createBetterAuthHandler(auth: BetterAuthInstance): RequestHandler {
+export function createBetterAuthHandler(
+  auth: BetterAuthInstance,
+): RequestHandler {
   const handler = toNodeHandler(auth);
   return (req, res, next) => {
     void Promise.resolve(handler(req, res)).catch(next);
@@ -112,7 +138,11 @@ export async function resolveBetterAuthSessionFromHeaders(
   auth: BetterAuthInstance,
   headers: Headers,
 ): Promise<BetterAuthSessionResult | null> {
-  const api = (auth as unknown as { api?: { getSession?: (input: unknown) => Promise<unknown> } }).api;
+  const api = (
+    auth as unknown as {
+      api?: { getSession?: (input: unknown) => Promise<unknown> };
+    }
+  ).api;
   if (!api?.getSession) return null;
 
   const sessionValue = await api.getSession({
@@ -124,9 +154,10 @@ export async function resolveBetterAuthSessionFromHeaders(
     session?: { id?: string; userId?: string } | null;
     user?: { id?: string; email?: string | null; name?: string | null } | null;
   };
-  const session = value.session?.id && value.session.userId
-    ? { id: value.session.id, userId: value.session.userId }
-    : null;
+  const session =
+    value.session?.id && value.session.userId
+      ? { id: value.session.id, userId: value.session.userId }
+      : null;
   const user = value.user?.id
     ? {
         id: value.user.id,
@@ -143,5 +174,8 @@ export async function resolveBetterAuthSession(
   auth: BetterAuthInstance,
   req: Request,
 ): Promise<BetterAuthSessionResult | null> {
-  return resolveBetterAuthSessionFromHeaders(auth, headersFromExpressRequest(req));
+  return resolveBetterAuthSessionFromHeaders(
+    auth,
+    headersFromExpressRequest(req),
+  );
 }
