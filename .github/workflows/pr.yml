@@ -111,6 +111,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Audit dependencies
+        run: bash scripts/ci-audit.sh
+
       - name: Typecheck
         run: pnpm -r typecheck
 

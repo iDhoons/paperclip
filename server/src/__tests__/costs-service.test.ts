@@ -94,11 +94,13 @@ function createApp() {
     req.actor = { type: "board", userId: "board-user", source: "local_implicit" };
     next();
   });
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   app.use("/api", costRoutes(makeDb() as any));
   app.use(errorHandler);
   return app;
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 function createAppWithActor(actor: any) {
   const app = express();
   app.use(express.json());
@@ -106,6 +108,7 @@ function createAppWithActor(actor: any) {
     req.actor = actor;
     next();
   });
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   app.use("/api", costRoutes(makeDb() as any));
   app.use(errorHandler);
   return app;

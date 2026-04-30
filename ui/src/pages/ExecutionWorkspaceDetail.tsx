@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "@/lib/router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ExecutionWorkspace, Project, ProjectWorkspace } from "@paperclipai/shared";
-import { ArrowLeft, Check, Copy, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { CopyText } from "../components/CopyText";
@@ -233,14 +233,14 @@ export function ExecutionWorkspaceDetail() {
 
   const projectQuery = useQuery({
     queryKey: workspace ? [...queryKeys.projects.detail(workspace.projectId), workspace.companyId] : ["projects", "detail", "__pending__"],
-    queryFn: () => projectsApi.get(workspace!.projectId, workspace!.companyId),
+    queryFn: () => projectsApi.get(workspace?.projectId, workspace?.companyId),
     enabled: Boolean(workspace?.projectId),
   });
   const project = projectQuery.data ?? null;
 
   const sourceIssueQuery = useQuery({
     queryKey: workspace?.sourceIssueId ? queryKeys.issues.detail(workspace.sourceIssueId) : ["issues", "detail", "__none__"],
-    queryFn: () => issuesApi.get(workspace!.sourceIssueId!),
+    queryFn: () => issuesApi.get(workspace?.sourceIssueId!),
     enabled: Boolean(workspace?.sourceIssueId),
   });
   const sourceIssue = sourceIssueQuery.data ?? null;
@@ -249,7 +249,7 @@ export function ExecutionWorkspaceDetail() {
     queryKey: workspace?.derivedFromExecutionWorkspaceId
       ? queryKeys.executionWorkspaces.detail(workspace.derivedFromExecutionWorkspaceId)
       : ["execution-workspaces", "detail", "__none__"],
-    queryFn: () => executionWorkspacesApi.get(workspace!.derivedFromExecutionWorkspaceId!),
+    queryFn: () => executionWorkspacesApi.get(workspace?.derivedFromExecutionWorkspaceId!),
     enabled: Boolean(workspace?.derivedFromExecutionWorkspaceId),
   });
   const derivedWorkspace = derivedWorkspaceQuery.data ?? null;
@@ -257,7 +257,7 @@ export function ExecutionWorkspaceDetail() {
     queryKey: workspace
       ? queryKeys.issues.listByExecutionWorkspace(workspace.companyId, workspace.id)
       : ["issues", "__execution-workspace__", "__none__"],
-    queryFn: () => issuesApi.list(workspace!.companyId, { executionWorkspaceId: workspace!.id }),
+    queryFn: () => issuesApi.list(workspace?.companyId, { executionWorkspaceId: workspace?.id }),
     enabled: Boolean(workspace?.companyId),
   });
   const linkedIssues = linkedIssuesQuery.data ?? [];
@@ -302,7 +302,7 @@ export function ExecutionWorkspaceDetail() {
   }, [setBreadcrumbs, workspace, project, projectRef]);
 
   const updateWorkspace = useMutation({
-    mutationFn: (patch: Record<string, unknown>) => executionWorkspacesApi.update(workspace!.id, patch),
+    mutationFn: (patch: Record<string, unknown>) => executionWorkspacesApi.update(workspace?.id, patch),
     onSuccess: (nextWorkspace) => {
       queryClient.setQueryData(queryKeys.executionWorkspaces.detail(nextWorkspace.id), nextWorkspace);
       queryClient.invalidateQueries({ queryKey: queryKeys.executionWorkspaces.closeReadiness(nextWorkspace.id) });
@@ -327,7 +327,7 @@ export function ExecutionWorkspaceDetail() {
   });
   const controlRuntimeServices = useMutation({
     mutationFn: (action: "start" | "stop" | "restart") =>
-      executionWorkspacesApi.controlRuntimeServices(workspace!.id, action),
+      executionWorkspacesApi.controlRuntimeServices(workspace?.id, action),
     onSuccess: (result, action) => {
       queryClient.setQueryData(queryKeys.executionWorkspaces.detail(result.workspace.id), result.workspace);
       queryClient.invalidateQueries({ queryKey: queryKeys.executionWorkspaces.workspaceOperations(result.workspace.id) });

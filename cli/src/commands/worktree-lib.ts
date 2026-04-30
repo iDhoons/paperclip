@@ -266,7 +266,7 @@ export function buildWorktreeEnvEntries(
 }
 
 function shellEscape(value: string): string {
-  return `'${value.replaceAll("'", `'\"'\"'`)}'`;
+  return `'${value.replaceAll("'", `'"'"'`)}'`;
 }
 
 export function formatShellExports(entries: Record<string, string>): string {

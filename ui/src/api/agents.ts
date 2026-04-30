@@ -100,7 +100,7 @@ export const agentsApi = {
         (agent) => agent.status !== "terminated" && normalizeAgentUrlKey(agent.urlKey) === urlKey,
       );
       if (matches.length !== 1) throw error;
-      return api.get<AgentDetail>(agentPath(matches[0]!.id, companyId));
+      return api.get<AgentDetail>(agentPath(matches[0]?.id, companyId));
     }
   },
   getConfiguration: (id: string, companyId?: string) =>

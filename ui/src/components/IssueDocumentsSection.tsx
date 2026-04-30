@@ -582,7 +582,7 @@ export function IssueDocumentsSection({
 
   useEffect(() => {
     hasScrolledToHashRef.current = false;
-  }, [issue.id, location.hash]);
+  }, []);
 
   useEffect(() => {
     const validKeys = new Set(sortedDocuments.map((doc) => doc.key));

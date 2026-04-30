@@ -110,6 +110,7 @@ function createApp(db: Record<string, unknown> = createDb()) {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     (req as any).actor = {
       type: "board",
       userId: "local-board",
@@ -119,6 +120,7 @@ function createApp(db: Record<string, unknown> = createDb()) {
     };
     next();
   });
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   app.use("/api", agentRoutes(db as any));
   app.use(errorHandler);
   return app;

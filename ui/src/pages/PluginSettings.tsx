@@ -92,7 +92,7 @@ export function PluginSettings() {
 
   // Fetch existing config for the plugin
   const configSchema = plugin?.manifestJson?.instanceConfigSchema as JsonSchemaNode | undefined;
-  const hasConfigSchema = configSchema && configSchema.properties && Object.keys(configSchema.properties).length > 0;
+  const hasConfigSchema = configSchema?.properties && Object.keys(configSchema.properties).length > 0;
 
   const { data: configData, isLoading: configLoading } = useQuery({
     queryKey: queryKeys.plugins.config(pluginId!),
@@ -119,11 +119,11 @@ export function PluginSettings() {
       { label: "Plugins", href: "/instance/settings/plugins" },
       { label: plugin?.manifestJson?.displayName ?? plugin?.packageName ?? "Plugin Details" },
     ]);
-  }, [selectedCompany?.name, setBreadcrumbs, companyPrefix, plugin]);
+  }, [selectedCompany?.name, setBreadcrumbs, plugin]);
 
   useEffect(() => {
     setActiveTab("configuration");
-  }, [pluginId]);
+  }, []);
 
   if (pluginLoading) {
     return <div className="p-4 text-sm text-muted-foreground">Loading plugin details...</div>;

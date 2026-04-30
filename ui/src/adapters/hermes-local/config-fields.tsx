@@ -26,7 +26,7 @@ export function HermesLocalConfigFields({
         <DraftInput
           value={
             isCreate
-              ? values!.instructionsFilePath ?? ""
+              ? values?.instructionsFilePath ?? ""
               : eff(
                   "adapterConfig",
                   "instructionsFilePath",
@@ -35,7 +35,7 @@ export function HermesLocalConfigFields({
           }
           onCommit={(v) =>
             isCreate
-              ? set!({ instructionsFilePath: v })
+              ? set?.({ instructionsFilePath: v })
               : mark("adapterConfig", "instructionsFilePath", v || undefined)
           }
           immediate

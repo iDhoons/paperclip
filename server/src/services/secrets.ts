@@ -140,7 +140,7 @@ export function secretService(db: Db) {
     opts?: { strictMode?: boolean },
   ) {
     const normalized = { ...adapterConfig };
-    if (!Object.prototype.hasOwnProperty.call(adapterConfig, "env")) {
+    if (!Object.hasOwn(adapterConfig, "env")) {
       return normalized;
     }
     normalized.env = await normalizeEnvConfig(companyId, adapterConfig.env, opts);
@@ -337,7 +337,7 @@ export function secretService(db: Db) {
     resolveAdapterConfigForRuntime: async (companyId: string, adapterConfig: Record<string, unknown>): Promise<{ config: Record<string, unknown>; secretKeys: Set<string> }> => {
       const resolved = { ...adapterConfig };
       const secretKeys = new Set<string>();
-      if (!Object.prototype.hasOwnProperty.call(adapterConfig, "env")) {
+      if (!Object.hasOwn(adapterConfig, "env")) {
         return { config: resolved, secretKeys };
       }
       const record = asRecord(adapterConfig.env);

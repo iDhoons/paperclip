@@ -73,7 +73,7 @@ export function useDateRange(): UseDateRangeResult {
   // (7d, 30d) advance their upper bound in sync with wall clock minutes rather than
   // drifting by the mount offset.
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [minuteTick, setMinuteTick] = useState(() => floorToMinute(new Date()));
+  const [_minuteTick, setMinuteTick] = useState(() => floorToMinute(new Date()));
   useEffect(() => {
     const now = new Date();
     const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
@@ -94,15 +94,15 @@ export function useDateRange(): UseDateRangeResult {
     if (preset !== "custom") return computeRange(preset);
     // treat custom date strings as local-date boundaries so the full day is included
     // regardless of the user's timezone. "from" starts at local midnight, "to" at 23:59:59.999.
-    const fromDate = customFrom ? new Date(customFrom + "T00:00:00") : null;
-    const toDate = customTo ? new Date(customTo + "T23:59:59.999") : null;
+    const fromDate = customFrom ? new Date(`${customFrom}T00:00:00`) : null;
+    const toDate = customTo ? new Date(`${customTo}T23:59:59.999`) : null;
     return {
       from: fromDate ? fromDate.toISOString() : "",
       to: toDate ? toDate.toISOString() : "",
     };
   // minuteTick drives re-evaluation of sliding presets once per minute.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preset, customFrom, customTo, minuteTick]);
+  }, [preset, customFrom, customTo]);
 
   const customReady = preset !== "custom" || (!!customFrom && !!customTo);
 

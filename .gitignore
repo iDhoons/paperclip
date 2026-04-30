@@ -51,6 +51,9 @@ tests/release-smoke/test-results/
 tests/release-smoke/playwright-report/
 .superset/
 .claude/worktrees/
+.claude-tmp/
+.codex-tmp/
+.playwright-mcp/
 
 # Plan watcher runtime
 .plan-watcher-state

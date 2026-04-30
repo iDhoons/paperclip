@@ -257,7 +257,7 @@ export async function heartbeatRun(opts: HeartbeatRunOptions): Promise<void> {
       `/api/heartbeat-runs/${activeRunId}/log?offset=${logOffset}&limitBytes=16384`,
       { ignoreNotFound: true },
     );
-    if (logResult && logResult.content) {
+    if (logResult?.content) {
       for (const chunk of logResult.content.split(/\r?\n/)) {
         if (!chunk) continue;
         const parsed = safeParseLogLine(chunk);

@@ -39,7 +39,7 @@ import {
   type RoutineRunDialogSubmitData,
 } from "../components/RoutineRunVariablesDialog";
 import { RoutineVariablesEditor, RoutineVariablesHint } from "../components/RoutineVariablesEditor";
-import { ScheduleEditor, describeSchedule } from "../components/ScheduleEditor";
+import { ScheduleEditor, } from "../components/ScheduleEditor";
 import { RunButton } from "../components/AgentActionButtons";
 import { getRecentAssigneeIds, sortAgentsByRecency, trackRecentAssignee } from "../lib/recent-assignees";
 import { Button } from "@/components/ui/button";
@@ -378,7 +378,7 @@ export function RoutineDetail() {
 
   useEffect(() => {
     autoResizeTextarea(titleInputRef.current);
-  }, [editDraft.title, routine?.id]);
+  }, []);
 
   const copySecretValue = async (label: string, value: string) => {
     try {
@@ -610,7 +610,7 @@ export function RoutineDetail() {
     () => new Map((projects ?? []).map((project) => [project.id, project])),
     [projects],
   );
-  const recentAssigneeIds = useMemo(() => getRecentAssigneeIds(), [routine?.id]);
+  const recentAssigneeIds = useMemo(() => getRecentAssigneeIds(), []);
   const assigneeOptions = useMemo<InlineEntityOption[]>(
     () =>
       sortAgentsByRecency(

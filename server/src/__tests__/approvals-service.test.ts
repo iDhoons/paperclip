@@ -70,6 +70,7 @@ describe("approvalService resolution idempotency", () => {
       [],
     );
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const svc = approvalService(dbStub.db as any);
     const result = await svc.approve("approval-1", "board", "ship it");
 
@@ -85,6 +86,7 @@ describe("approvalService resolution idempotency", () => {
       [],
     );
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const svc = approvalService(dbStub.db as any);
     const result = await svc.reject("approval-1", "board", "not now");
 
@@ -97,6 +99,7 @@ describe("approvalService resolution idempotency", () => {
     const approved = createApproval("approved");
     const dbStub = createDbStub([[createApproval("pending")]], [approved]);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const svc = approvalService(dbStub.db as any);
     const result = await svc.approve("approval-1", "board", "ship it");
 

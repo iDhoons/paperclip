@@ -195,7 +195,7 @@ async function runCliJson<T>(args: string[], opts: { apiBase: string; configPath
     },
   );
   const stdout = result.stdout.trim();
-  const jsonStart = stdout.search(/[\[{]/);
+  const jsonStart = stdout.search(/[[{]/);
   if (jsonStart === -1) {
     throw new Error(`CLI did not emit JSON.\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
   }

@@ -55,7 +55,7 @@ function defaultExecutionWorkspaceModeForProject(project: { executionWorkspacePo
 
 function BreakablePath({ text }: { text: string }) {
   const parts: React.ReactNode[] = [];
-  const segments = text.split(/(?<=[\/-])/);
+  const segments = text.split(/(?<=[/-])/);
   for (let i = 0; i < segments.length; i++) {
     if (i > 0) parts.push(<wbr key={i} />);
     parts.push(segments[i]);

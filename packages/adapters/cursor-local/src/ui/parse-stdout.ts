@@ -53,12 +53,12 @@ function formatShellToolResultForLog(result: unknown): string {
   const lines: string[] = [];
   if (Number.isFinite(exitCode)) lines.push(`exit ${exitCode}`);
   if (stdout) {
-    const out = stdout.length > SHELL_OUTPUT_TRUNCATE ? stdout.slice(0, SHELL_OUTPUT_TRUNCATE) + "\n... (truncated)" : stdout;
+    const out = stdout.length > SHELL_OUTPUT_TRUNCATE ? `${stdout.slice(0, SHELL_OUTPUT_TRUNCATE)}\n... (truncated)` : stdout;
     lines.push("<stdout>");
     lines.push(out);
   }
   if (stderr) {
-    const err = stderr.length > SHELL_OUTPUT_TRUNCATE ? stderr.slice(0, SHELL_OUTPUT_TRUNCATE) + "\n... (truncated)" : stderr;
+    const err = stderr.length > SHELL_OUTPUT_TRUNCATE ? `${stderr.slice(0, SHELL_OUTPUT_TRUNCATE)}\n... (truncated)` : stderr;
     lines.push("<stderr>");
     lines.push(err);
   }

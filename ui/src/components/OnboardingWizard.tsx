@@ -133,7 +133,7 @@ export function OnboardingWizard() {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
+    el.style.height = `${el.scrollHeight}px`;
   }, []);
 
   // Created entity IDs — pre-populate from existing company when skipping step 1
@@ -152,7 +152,7 @@ export function OnboardingWizard() {
 
   useEffect(() => {
     setRouteDismissed(false);
-  }, [location.pathname]);
+  }, []);
 
   // Sync step and company when onboarding opens with options.
   // Keep this independent from company-list refreshes so Step 1 completion
@@ -183,7 +183,7 @@ export function OnboardingWizard() {
   // Resize textarea when step 3 is shown or description changes
   useEffect(() => {
     if (step === 3) autoResizeTextarea();
-  }, [step, taskDescription, autoResizeTextarea]);
+  }, [step, autoResizeTextarea]);
 
   const {
     data: adapterModels,
@@ -229,7 +229,7 @@ export function OnboardingWizard() {
     if (step !== 2) return;
     setAdapterEnvResult(null);
     setAdapterEnvError(null);
-  }, [step, adapterType, model, command, args, url]);
+  }, [step]);
 
   const selectedModel = (adapterModels ?? []).find((m) => m.id === model);
   const hasAnthropicApiKeyOverrideCheck =
@@ -1020,7 +1020,7 @@ export function OnboardingWizard() {
                           <p className="font-medium">Manual debug</p>
                           <p className="text-muted-foreground font-mono break-all">
                             {adapterType === "cursor"
-                              ? `${effectiveAdapterCommand} -p --mode ask --output-format json \"Respond with hello.\"`
+                              ? `${effectiveAdapterCommand} -p --mode ask --output-format json "Respond with hello."`
                               : adapterType === "codex_local"
                               ? `${effectiveAdapterCommand} exec --json -`
                               : adapterType === "gemini_local"

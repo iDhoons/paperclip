@@ -458,7 +458,7 @@ export function FilesTab({ context }: PluginDetailTabProps) {
     setSelectedPath(null);
     setMobileView("browser");
     lastConsumedFileRef.current = null;
-  }, [selectedWorkspace?.id]);
+  }, []);
 
   // When a file path appears (or changes) in the URL and workspace is ready, select it.
   useEffect(() => {
@@ -524,7 +524,7 @@ export function FilesTab({ context }: PluginDetailTabProps) {
       view.destroy();
       viewRef.current = null;
     };
-  }, [fileContentData?.content, selectedPath, isDarkMode]);
+  }, [fileContentData?.content, isDarkMode]);
 
   useEffect(() => {
     const handleKeydown = (event: KeyboardEvent) => {
@@ -540,7 +540,7 @@ export function FilesTab({ context }: PluginDetailTabProps) {
 
     window.addEventListener("keydown", handleKeydown);
     return () => window.removeEventListener("keydown", handleKeydown);
-  }, [selectedWorkspace, selectedPath, isDirty, isSaving]);
+  }, [selectedWorkspace, selectedPath, isDirty, isSaving, handleSave]);
 
   async function handleSave() {
     if (!selectedWorkspace || !selectedPath || !viewRef.current) {

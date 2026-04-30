@@ -37,7 +37,7 @@ function extractTextContent(content: string | Array<{ type: string; text?: strin
 }
 
 // Track pending tool calls for proper toolUseId matching
-let pendingToolCalls = new Map<string, { toolName: string; args: unknown }>();
+const pendingToolCalls = new Map<string, { toolName: string; args: unknown }>();
 
 export function resetParserState(): void {
   pendingToolCalls.clear();

@@ -13,9 +13,9 @@
  *   node scripts/screenshot.cjs http://localhost:5173/PAPA/agents/cto/instructions
  */
 
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+const fs = require("node:fs");
+const path = require("node:path");
+const os = require("node:os");
 
 // --- CLI args -----------------------------------------------------------
 const args = process.argv.slice(2);
@@ -44,7 +44,7 @@ function loadBoardToken() {
     const auth = JSON.parse(fs.readFileSync(authPath, "utf-8"));
     const creds = auth.credentials || {};
     const entry = Object.values(creds)[0];
-    if (entry && entry.token && entry.apiBase) return { token: entry.token, apiBase: entry.apiBase };
+    if (entry?.token && entry.apiBase) return { token: entry.token, apiBase: entry.apiBase };
   } catch (_) {
     // ignore
   }

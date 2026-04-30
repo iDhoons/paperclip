@@ -565,7 +565,7 @@ export function AdapterManager() {
                   }
                   onRemove={(type) => setRemoveType(type)}
                   onReload={(type) => reloadMutation.mutate(type)}
-                  onReinstall={!adapter.isLocalPath ? (type) => setReinstallTarget(adapter) : undefined}
+                  onReinstall={!adapter.isLocalPath ? (_type) => setReinstallTarget(adapter) : undefined}
                   isToggling={isBuiltinOverride ? overrideMutation.isPending : toggleMutation.isPending}
                   isReloading={reloadMutation.isPending}
                   isReinstalling={reinstallMutation.isPending}

@@ -59,7 +59,6 @@ import type {
   AgentSessionEvent,
 } from "./types.js";
 import type {
-  JsonRpcId,
   JsonRpcRequest,
   JsonRpcResponse,
   InitializeParams,
@@ -75,7 +74,6 @@ import type {
   WorkerToHostMethods,
 } from "./protocol.js";
 import {
-  JSONRPC_VERSION,
   JSONRPC_ERROR_CODES,
   PLUGIN_RPC_ERROR_CODES,
   createRequest,
@@ -197,7 +195,7 @@ export function runWorker(
   plugin: PaperclipPlugin,
   moduleUrl: string,
   options?: RunWorkerOptions,
-): WorkerRpcHost | void {
+): WorkerRpcHost | undefined {
   if (
     options?.stdin != null &&
     options?.stdout != null
@@ -252,7 +250,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
   let running = true;
   let initialized = false;
   let manifest: PaperclipPluginManifestV1 | null = null;
-  let currentConfig: Record<string, unknown> = {};
+  let _currentConfig: Record<string, unknown> = {};
 
   // Plugin handler registrations (populated during setup())
   const eventHandlers: EventRegistration[] = [];
@@ -282,6 +280,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
 
   function sendMessage(message: unknown): void {
     if (!running) return;
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const serialized = serializeMessage(message as any);
     stdoutStream.write(serialized);
   }
@@ -845,7 +844,9 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
       // METHOD_NOT_FOUND, METHOD_NOT_IMPLEMENTED) — fall back to
       // WORKER_ERROR for untyped exceptions.
       const errorCode =
+        // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
         typeof (err as any)?.code === "number"
+          // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
           ? (err as any).code
           : PLUGIN_RPC_ERROR_CODES.WORKER_ERROR;
 
@@ -909,7 +910,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
     }
 
     manifest = params.manifest;
-    currentConfig = params.config;
+    _currentConfig = params.config;
 
     // Call the plugin's setup function
     await plugin.definition.setup(ctx);
@@ -964,7 +965,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
   }
 
   async function handleConfigChanged(params: ConfigChangedParams): Promise<void> {
-    currentConfig = params.config;
+    _currentConfig = params.config;
 
     if (plugin.definition.onConfigChanged) {
       await plugin.definition.onConfigChanged(params.config);
@@ -1132,6 +1133,7 @@ export function startWorkerRpcHost(options: WorkerRpcHostOptions): WorkerRpcHost
       handleHostRequest(message as JsonRpcRequest).catch((err) => {
         // Unhandled error in the async handler — send error response
         const errorMessage = err instanceof Error ? err.message : String(err);
+        // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
         const errorCode = (err as any)?.code ?? PLUGIN_RPC_ERROR_CODES.WORKER_ERROR;
         try {
           sendMessage(

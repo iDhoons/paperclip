@@ -54,12 +54,15 @@ export const httpLogger = pinoHttp({
     return `${req.method} ${req.url} ${res.statusCode}`;
   },
   customErrorMessage(req, res, err) {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const ctx = (res as any).__errorContext;
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const errMsg = ctx?.error?.message || err?.message || (res as any).err?.message || "unknown error";
     return `${req.method} ${req.url} ${res.statusCode} — ${errMsg}`;
   },
   customProps(req, res) {
     if (res.statusCode >= 400) {
+      // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
       const ctx = (res as any).__errorContext;
       if (ctx) {
         return {
@@ -70,6 +73,7 @@ export const httpLogger = pinoHttp({
         };
       }
       const props: Record<string, unknown> = {};
+      // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
       const { body, params, query } = req as any;
       if (body && typeof body === "object" && Object.keys(body).length > 0) {
         props.reqBody = body;
@@ -80,7 +84,9 @@ export const httpLogger = pinoHttp({
       if (query && typeof query === "object" && Object.keys(query).length > 0) {
         props.reqQuery = query;
       }
+      // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
       if ((req as any).route?.path) {
+        // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
         props.routePath = (req as any).route.path;
       }
       return props;

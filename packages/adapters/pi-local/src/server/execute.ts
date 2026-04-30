@@ -400,7 +400,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       // Emit complete lines
       for (const line of lines) {
         if (line) {
-          await onLog(stream, line + "\n");
+          await onLog(stream, `${line}\n`);
         }
       }
     };

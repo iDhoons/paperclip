@@ -275,7 +275,7 @@ function normalizeHeaderValue(
     "string"
   ];
   for (const key of candidateKeys) {
-    if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
+    if (!Object.hasOwn(value, key)) continue;
     const normalized = normalizeHeaderValue(
       (value as Record<string, unknown>)[key],
       depth + 1
@@ -325,14 +325,14 @@ function extractHeaderEntries(input: unknown): Array<[string, unknown]> {
       nonEmptyTrimmedString(mapped.name) ??
       nonEmptyTrimmedString(mapped.header);
     if (explicitKey) {
-      const explicitValue = Object.prototype.hasOwnProperty.call(
+      const explicitValue = Object.hasOwn(
         mapped,
         "value"
       )
         ? mapped.value
-        : Object.prototype.hasOwnProperty.call(mapped, "token")
+        : Object.hasOwn(mapped, "token")
         ? mapped.token
-        : Object.prototype.hasOwnProperty.call(mapped, "secret")
+        : Object.hasOwn(mapped, "secret")
         ? mapped.secret
         : mapped;
       entries.push([explicitKey, explicitValue]);
@@ -516,7 +516,7 @@ export function mergeJoinDefaultsPayloadForReplay(
       ...(existingHeaders ?? {}),
       ...(nextHeaders ?? {})
     };
-  } else if (Object.prototype.hasOwnProperty.call(merged, "headers")) {
+  } else if (Object.hasOwn(merged, "headers")) {
     delete merged.headers;
   }
 
@@ -1163,7 +1163,7 @@ export function buildInviteOnboardingTextDocument(
     ~/.openclaw/openclaw.json -> gateway.auth.token
     Extract:
 
-    TOKEN="$(node -p 'require(process.env.HOME+\"/.openclaw/openclaw.json\").gateway.auth.token')"
+    TOKEN="$(node -p 'require(process.env.HOME+"/.openclaw/openclaw.json").gateway.auth.token')"
     test -n "$TOKEN" || (echo "Missing TOKEN" && exit 1)
     test "\${#TOKEN}" -ge 16 || (echo "Gateway token unexpectedly short (\${#TOKEN})" && exit 1)
 
@@ -1798,6 +1798,7 @@ export function accessRoutes(
   async function assertCompanyPermission(
     req: Request,
     companyId: string,
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     permissionKey: any
   ) {
     assertCompanyAccess(req, companyId);

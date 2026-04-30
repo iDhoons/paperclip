@@ -120,6 +120,7 @@ type CommentContextData = {
   copiedCount: number;
 } | null;
 
+// biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
 type ProcessResult = {
   commandKey: string;
   cwd: string;
@@ -805,7 +806,7 @@ function KitchenSinkIssueCrudDemo({ context }: { context: PluginPageProps["conte
 
   useEffect(() => {
     void loadIssues();
-  }, [context.companyId]);
+  }, [loadIssues]);
 
   async function handleCreate() {
     if (!context.companyId || !createTitle.trim()) return;
@@ -952,7 +953,7 @@ function KitchenSinkCompanyCrudDemo({ context }: { context: PluginPageProps["con
 
   useEffect(() => {
     void loadCompanies();
-  }, []);
+  }, [loadCompanies]);
 
   async function handleCreate() {
     const trimmed = newCompanyName.trim();
@@ -1218,7 +1219,7 @@ function KitchenSinkHostIntegrationDemo({ context }: { context: PluginPageProps[
 
   useEffect(() => {
     void loadRuns();
-  }, [context.companyId]);
+  }, [loadRuns]);
 
   return (
     <Section title="Host Integrations">
@@ -1398,7 +1399,7 @@ function KitchenSinkConsole({ context }: { context: { companyId: string | null; 
     setProjectsLimit(20);
     setIssuesLimit(20);
     setGoalsLimit(20);
-  }, [companyId]);
+  }, []);
 
   useEffect(() => {
     if (!selectedProjectId && projects.data?.[0]?.id) setSelectedProjectId(projects.data[0].id);

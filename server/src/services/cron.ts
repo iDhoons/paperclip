@@ -85,7 +85,7 @@ function parseField(token: string, spec: FieldSpec): number[] {
       const base = trimmed.slice(0, slashIdx);
       const stepStr = trimmed.slice(slashIdx + 1);
       const step = parseInt(stepStr, 10);
-      if (isNaN(step) || step <= 0) {
+      if (Number.isNaN(step) || step <= 0) {
         throw new Error(
           `Invalid step "${stepStr}" in cron ${spec.name} field`,
         );
@@ -99,7 +99,7 @@ function parseField(token: string, spec: FieldSpec): number[] {
       } else if (base.includes("-")) {
         // N-M/S — range with step
         const [a, b] = base.split("-").map((s) => parseInt(s, 10));
-        if (isNaN(a!) || isNaN(b!)) {
+        if (Number.isNaN(a!) || Number.isNaN(b!)) {
           throw new Error(
             `Invalid range "${base}" in cron ${spec.name} field`,
           );
@@ -109,7 +109,7 @@ function parseField(token: string, spec: FieldSpec): number[] {
       } else {
         // N/S — start at N, step S
         const start = parseInt(base, 10);
-        if (isNaN(start)) {
+        if (Number.isNaN(start)) {
           throw new Error(
             `Invalid start "${base}" in cron ${spec.name} field`,
           );
@@ -131,7 +131,7 @@ function parseField(token: string, spec: FieldSpec): number[] {
       const [aStr, bStr] = trimmed.split("-");
       const a = parseInt(aStr!, 10);
       const b = parseInt(bStr!, 10);
-      if (isNaN(a) || isNaN(b)) {
+      if (Number.isNaN(a) || Number.isNaN(b)) {
         throw new Error(
           `Invalid range "${trimmed}" in cron ${spec.name} field`,
         );
@@ -159,7 +159,7 @@ function parseField(token: string, spec: FieldSpec): number[] {
 
     // Single value
     const val = parseInt(trimmed, 10);
-    if (isNaN(val)) {
+    if (Number.isNaN(val)) {
       throw new Error(
         `Invalid value "${trimmed}" in cron ${spec.name} field`,
       );

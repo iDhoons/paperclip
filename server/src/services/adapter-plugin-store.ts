@@ -63,12 +63,12 @@ function ensureDirs(): void {
   fs.mkdirSync(ADAPTER_PLUGINS_DIR, { recursive: true });
   const pkgJsonPath = path.join(ADAPTER_PLUGINS_DIR, "package.json");
   if (!fs.existsSync(pkgJsonPath)) {
-    fs.writeFileSync(pkgJsonPath, JSON.stringify({
+    fs.writeFileSync(pkgJsonPath, `${JSON.stringify({
       name: "paperclip-adapter-plugins",
       version: "0.0.0",
       private: true,
       description: "Managed directory for Paperclip external adapter plugins. Do not edit manually.",
-    }, null, 2) + "\n");
+    }, null, 2)}\n`);
   }
 }
 

@@ -11,7 +11,6 @@ import {
   useState,
   type CSSProperties,
   type ErrorInfo,
-  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
@@ -214,7 +213,6 @@ function launcherShellBoundsStyle(bounds: PluginLauncherBounds | null): CSSPrope
       return { width: "calc(100vw - 2rem)", height: "calc(100vh - 2rem)" };
     case "inline":
       return { width: "min(24rem, calc(100vw - 2rem))" };
-    case "default":
     default:
       return { width: "min(40rem, calc(100vw - 2rem))" };
   }
@@ -590,7 +588,7 @@ export function PluginLauncherProvider({ children }: { children: ReactNode }) {
   const [stack, setStack] = useState<LauncherInstance[]>([]);
   const stackRef = useRef(stack);
   stackRef.current = stack;
-  const location = useLocation();
+  const _location = useLocation();
   const navigate = useNavigate();
 
   const closeLauncher = useCallback(
@@ -623,7 +621,7 @@ export function PluginLauncherProvider({ children }: { children: ReactNode }) {
     );
     // Only react to navigation changes, not stack churn.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key]);
+  }, [stack.map, stack.length, closeLauncher]);
 
   const requestBounds = useCallback(
     async (key: string, request: PluginModalBoundsRequest) => {

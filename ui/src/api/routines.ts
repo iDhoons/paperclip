@@ -1,5 +1,4 @@
 import type {
-  ActivityEvent,
   Routine,
   RoutineDetail,
   RoutineListItem,

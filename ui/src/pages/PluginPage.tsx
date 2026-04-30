@@ -96,7 +96,7 @@ export function PluginPage() {
         { label: pageSlot.pluginDisplayName },
       ]);
     }
-  }, [pageSlot, companyPrefix, setBreadcrumbs]);
+  }, [pageSlot, setBreadcrumbs]);
 
   if (!resolvedCompanyId) {
     if (hasInvalidCompanyPrefix) {

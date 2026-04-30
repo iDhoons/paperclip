@@ -79,7 +79,7 @@ function ComboboxField({
   // Sync filter with external value when it changes (e.g. provider switch resets model)
   useEffect(() => {
     setFilter("");
-  }, [value]);
+  }, []);
 
   const filtered = options.filter((opt) => {
     if (!filter) return true;
@@ -87,7 +87,7 @@ function ComboboxField({
     return (
       opt.value.toLowerCase().includes(q) ||
       opt.label.toLowerCase().includes(q) ||
-      (opt.group && opt.group.toLowerCase().includes(q))
+      (opt.group?.toLowerCase().includes(q))
     );
   });
 
@@ -99,7 +99,7 @@ function ComboboxField({
   for (const opt of filtered) {
     const g = opt.group ?? "";
     if (!grouped.has(g)) grouped.set(g, []);
-    grouped.get(g)!.push(opt);
+    grouped.get(g)?.push(opt);
   }
 
   const select = useCallback(
@@ -459,8 +459,6 @@ export function SchemaConfigFields({
               </Field>
             );
           }
-
-          case "text":
           default:
             return (
               <Field key={field.key} label={field.label} hint={field.hint}>

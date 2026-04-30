@@ -146,7 +146,7 @@ function makeCompanyPatternDataUrl(seed: string, brandColor?: string | null, log
 
       // Canonical 16-level ordered dither: level 0..15 compared to Bayer 4x4 threshold index.
       const level = Math.max(0, Math.min(15, Math.floor(signal * 16)));
-      const thresholdIndex = BAYER_4X4[y & 3]![x & 3]!;
+      const thresholdIndex = BAYER_4X4[y & 3]?.[x & 3]!;
       if (level <= thresholdIndex) continue;
 
       const cx = x * cellSize + cellSize / 2;
@@ -171,7 +171,7 @@ export function CompanyPatternIcon({
   const logo = !imageError && typeof logoUrl === "string" && logoUrl.trim().length > 0 ? logoUrl : null;
   useEffect(() => {
     setImageError(false);
-  }, [logoUrl]);
+  }, []);
   const patternDataUrl = useMemo(
     () => makeCompanyPatternDataUrl(companyName.trim().toLowerCase(), brandColor),
     [companyName, brandColor],

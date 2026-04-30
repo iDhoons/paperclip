@@ -54,7 +54,7 @@ export function createLocalDiskStorageProvider(baseDir: string): StorageProvider
     async getObject(input): Promise<GetObjectResult> {
       const filePath = resolveWithin(root, input.objectKey);
       const stat = await statOrNull(filePath);
-      if (!stat || !stat.isFile()) {
+      if (!stat?.isFile()) {
         throw notFound("Object not found");
       }
       return {
@@ -67,7 +67,7 @@ export function createLocalDiskStorageProvider(baseDir: string): StorageProvider
     async headObject(input): Promise<HeadObjectResult> {
       const filePath = resolveWithin(root, input.objectKey);
       const stat = await statOrNull(filePath);
-      if (!stat || !stat.isFile()) {
+      if (!stat?.isFile()) {
         return { exists: false };
       }
       return {

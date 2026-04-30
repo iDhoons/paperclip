@@ -120,7 +120,7 @@ function containsRedactedMarker(value: unknown): boolean {
 }
 
 function hasConfigPatchFields(data: Partial<typeof agents.$inferInsert>) {
-  return CONFIG_REVISION_FIELDS.some((field) => Object.prototype.hasOwnProperty.call(data, field));
+  return CONFIG_REVISION_FIELDS.some((field) => Object.hasOwn(data, field));
 }
 
 function diffConfigSnapshot(

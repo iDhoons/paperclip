@@ -343,6 +343,7 @@ export function createPluginJobScheduler(
   async function dispatchJob(
     job: typeof pluginJobs.$inferSelect,
   ): Promise<void> {
+    // biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
     const { id: jobId, pluginId, jobKey, schedule } = job;
     const jobLog = log.child({ jobId, pluginId, jobKey });
 

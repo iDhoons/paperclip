@@ -19,6 +19,7 @@ function attachErrorContext(
   payload: ErrorContext["error"],
   rawError?: Error,
 ) {
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   (res as any).__errorContext = {
     error: payload,
     method: req.method,
@@ -28,6 +29,7 @@ function attachErrorContext(
     reqQuery: req.query,
   } satisfies ErrorContext;
   if (rawError) {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     (res as any).err = rawError;
   }
 }

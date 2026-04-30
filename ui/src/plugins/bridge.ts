@@ -236,15 +236,15 @@ export function usePluginData<T = unknown>(
   const { pluginId, hostContext } = usePluginBridgeContext();
   const companyId = hostContext.companyId;
   const renderEnvironmentSnapshot = serializeRenderEnvironment(hostContext.renderEnvironment);
-  const renderEnvironmentKey = serializeRenderEnvironmentSnapshot(renderEnvironmentSnapshot);
+  const _renderEnvironmentKey = serializeRenderEnvironmentSnapshot(renderEnvironmentSnapshot);
 
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<PluginBridgeError | null>(null);
-  const [refreshCounter, setRefreshCounter] = useState(0);
+  const [_refreshCounter, setRefreshCounter] = useState(0);
 
   // Stable serialization for params change detection
-  const paramsKey = serializeParams(params);
+  const _paramsKey = serializeParams(params);
 
   useEffect(() => {
     let cancelled = false;
@@ -295,7 +295,7 @@ export function usePluginData<T = unknown>(
       if (retryTimer) clearTimeout(retryTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pluginId, key, paramsKey, refreshCounter, companyId, renderEnvironmentKey]);
+  }, [pluginId, key, companyId, renderEnvironmentSnapshot, params]);
 
   const refresh = useCallback(() => {
     setRefreshCounter((c) => c + 1);

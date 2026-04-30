@@ -70,6 +70,7 @@ type FeedbackTraceRow = typeof feedbackExports.$inferSelect & {
   issueTitle: string;
 };
 
+// biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
 type PendingFeedbackExportRow = typeof feedbackExports.$inferSelect;
 
 type IssueFeedbackContext = {

@@ -947,7 +947,7 @@ function TranscriptToolGroup({
   const subtitle = runningItem
     ? summarizeToolInput(runningItem.name, runningItem.input, density)
     : null;
-  const statusTone = isRunning
+  const _statusTone = isRunning
     ? "text-cyan-700 dark:text-cyan-300"
     : "text-foreground/70";
 
@@ -1218,7 +1218,6 @@ function TranscriptDiffGroup({
                     {"\n"}
                   </span>
                 );
-              case "context":
               default:
                 return (
                   <span key={key} className="block text-muted-foreground/70">
@@ -1243,7 +1242,7 @@ function TranscriptStderrGroup({
   density: TranscriptDensity;
 }) {
   const [open, setOpen] = useState(false);
-  const compact = density === "compact";
+  const _compact = density === "compact";
   return (
     <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] p-2 text-amber-700 dark:text-amber-300">
       <div

@@ -55,9 +55,11 @@ async function createApp(actor: Record<string, unknown>) {
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     (req as any).actor = actor;
     next();
   });
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   app.use("/api/companies", companyRoutes({} as any));
   app.use(errorHandler);
   return app;

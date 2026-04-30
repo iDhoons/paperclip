@@ -476,7 +476,7 @@ export function createTestHarness(options: TestHarnessOptions): TestHarness {
         const cid = requireCompanyId(companyId);
         const agent = agents.get(agentId);
         if (!isInCompany(agent, cid)) throw new Error(`Agent not found: ${agentId}`);
-        if (agent!.status === "terminated") throw new Error("Cannot pause terminated agent");
+        if (agent?.status === "terminated") throw new Error("Cannot pause terminated agent");
         const updated: Agent = { ...agent!, status: "paused", updatedAt: new Date() };
         agents.set(agentId, updated);
         return updated;
@@ -486,28 +486,28 @@ export function createTestHarness(options: TestHarnessOptions): TestHarness {
         const cid = requireCompanyId(companyId);
         const agent = agents.get(agentId);
         if (!isInCompany(agent, cid)) throw new Error(`Agent not found: ${agentId}`);
-        if (agent!.status === "terminated") throw new Error("Cannot resume terminated agent");
-        if (agent!.status === "pending_approval") throw new Error("Pending approval agents cannot be resumed");
+        if (agent?.status === "terminated") throw new Error("Cannot resume terminated agent");
+        if (agent?.status === "pending_approval") throw new Error("Pending approval agents cannot be resumed");
         const updated: Agent = { ...agent!, status: "idle", updatedAt: new Date() };
         agents.set(agentId, updated);
         return updated;
       },
-      async invoke(agentId, companyId, opts) {
+      async invoke(agentId, companyId, _opts) {
         requireCapability(manifest, capabilitySet, "agents.invoke");
         const cid = requireCompanyId(companyId);
         const agent = agents.get(agentId);
         if (!isInCompany(agent, cid)) throw new Error(`Agent not found: ${agentId}`);
         if (
-          agent!.status === "paused" ||
-          agent!.status === "terminated" ||
-          agent!.status === "pending_approval"
+          agent?.status === "paused" ||
+          agent?.status === "terminated" ||
+          agent?.status === "pending_approval"
         ) {
-          throw new Error(`Agent is not invokable in its current state: ${agent!.status}`);
+          throw new Error(`Agent is not invokable in its current state: ${agent?.status}`);
         }
         return { runId: randomUUID() };
       },
       sessions: {
-        async create(agentId, companyId, opts) {
+        async create(agentId, companyId, _opts) {
           requireCapability(manifest, capabilitySet, "agent.sessions.create");
           const cid = requireCompanyId(companyId);
           const agent = agents.get(agentId);

@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import type { Db } from "@paperclipai/db";
 import { assertCompanyAccess, getActorInfo } from "./authz.js";

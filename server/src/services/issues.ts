@@ -177,6 +177,7 @@ type IssueActiveRunRow = {
 };
 type IssueWithLabels = IssueRow & { labels: IssueLabelRow[]; labelIds: string[] };
 type IssueWithLabelsAndRun = IssueWithLabels & { activeRun: IssueActiveRunRow | null };
+// biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
 type IssueUserCommentStats = {
   issueId: string;
   myLastCommentAt: Date | null;
@@ -530,6 +531,7 @@ function latestIssueActivityAt(...values: Array<Date | string | null | undefined
   return normalized[0] ?? null;
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 async function labelMapForIssues(dbOrTx: any, issueIds: string[]): Promise<Map<string, IssueLabelRow[]>> {
   const map = new Map<string, IssueLabelRow[]>();
   if (issueIds.length === 0) return map;
@@ -551,6 +553,7 @@ async function labelMapForIssues(dbOrTx: any, issueIds: string[]): Promise<Map<s
   return map;
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 async function withIssueLabels(dbOrTx: any, rows: IssueRow[]): Promise<IssueWithLabels[]> {
   if (rows.length === 0) return [];
   const labelsByIssueId = await labelMapForIssues(dbOrTx, rows.map((row) => row.id));
@@ -567,6 +570,7 @@ async function withIssueLabels(dbOrTx: any, rows: IssueRow[]): Promise<IssueWith
 const ACTIVE_RUN_STATUSES = ["queued", "running"];
 
 async function activeRunMapForIssues(
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   dbOrTx: any,
   issueRows: IssueWithLabels[],
 ): Promise<Map<string, IssueActiveRunRow>> {
@@ -728,6 +732,7 @@ export function issueService(db: Db) {
     }
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   async function assertValidLabelIds(companyId: string, labelIds: string[], dbOrTx: any = db) {
     if (labelIds.length === 0) return;
     const existing = await dbOrTx
@@ -743,6 +748,7 @@ export function issueService(db: Db) {
     issueId: string,
     companyId: string,
     labelIds: string[],
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     dbOrTx: any = db,
   ) {
     const deduped = [...new Set(labelIds)];

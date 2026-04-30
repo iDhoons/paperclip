@@ -19,7 +19,6 @@ import {
   type PluginStateScopeKind,
   type ScopeKey,
   type ToolResult,
-  type ToolRunContext,
 } from "@paperclipai/plugin-sdk";
 import type { Goal, Issue } from "@paperclipai/shared";
 import {
@@ -75,7 +74,7 @@ function isScopeKind(value: unknown): value is PluginStateScopeKind {
   return typeof value === "string" && PLUGIN_STATE_SCOPE_KINDS.includes(value as PluginStateScopeKind);
 }
 
-function summarizeError(error: unknown): string {
+function _summarizeError(error: unknown): string {
   if (error instanceof Error) return error.message;
   return String(error);
 }

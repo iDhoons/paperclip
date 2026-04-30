@@ -45,7 +45,7 @@ import { ChoosePathButton } from "./PathInstructionsModal";
 import { OpenCodeLogoIcon } from "./OpenCodeLogoIcon";
 import { ReportsToPicker } from "./ReportsToPicker";
 import { shouldShowLegacyWorkingDirectoryField } from "../lib/legacy-agent-config";
-import { listAdapterOptions, listVisibleAdapterTypes } from "../adapters/metadata";
+import { listAdapterOptions, } from "../adapters/metadata";
 import { getAdapterLabel } from "../adapters/adapter-display-registry";
 import { useDisabledAdaptersSync } from "../adapters/use-disabled-adapters";
 
@@ -221,7 +221,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
       }
       agentRef.current = props.agent;
     }
-  }, [isCreate, !isCreate ? props.agent : undefined]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isCreate, props.agent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isDirty = !isCreate && isOverlayDirty(overlay);
 
@@ -351,7 +351,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     enabled: Boolean(selectedCompanyId && isLocal),
   });
   const detectedModel = detectedModelData?.model ?? null;
-  const detectedModelCandidates = detectedModelData?.candidates ?? [];
+  const _detectedModelCandidates = detectedModelData?.candidates ?? [];
 
   const { data: companyAgents = [] } = useQuery({
     queryKey: selectedCompanyId ? queryKeys.agents.list(selectedCompanyId) : ["agents", "none", "list"],
@@ -406,7 +406,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
 
   // Current model for display
   const currentModelId = isCreate
-    ? val!.model
+    ? val?.model
     : eff("adapterConfig", "model", String(config.model ?? ""));
 
   const thinkingEffortKey =
@@ -426,7 +426,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
           ? openCodeThinkingEffortOptions
           : claudeThinkingEffortOptions;
   const currentThinkingEffort = isCreate
-    ? val!.thinkingEffort
+    ? val?.thinkingEffort
     : adapterType === "codex_local"
       ? eff(
           "adapterConfig",
@@ -440,14 +440,14 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
       : eff("adapterConfig", "effort", String(config.effort ?? ""));
   const showThinkingEffort = adapterType !== "gemini_local";
   const codexSearchEnabled = adapterType === "codex_local"
-    ? (isCreate ? Boolean(val!.search) : eff("adapterConfig", "search", Boolean(config.search)))
+    ? (isCreate ? Boolean(val?.search) : eff("adapterConfig", "search", Boolean(config.search)))
     : false;
-  const effectiveRuntimeConfig = useMemo(() => {
+  const _effectiveRuntimeConfig = useMemo(() => {
     if (isCreate) {
       return {
         heartbeat: {
-          enabled: val!.heartbeatEnabled,
-          intervalSec: val!.intervalSec,
+          enabled: val?.heartbeatEnabled,
+          intervalSec: val?.intervalSec,
         },
       };
     }
@@ -600,7 +600,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                     } else if (t === "opencode_local") {
                       nextValues.model = "";
                     }
-                    set!(nextValues);
+                    set?.(nextValues);
                   } else {
                     // Clear all adapter config and explicitly blank out model + effort/mode keys
                     // so the old adapter's values don't bleed through via eff()
@@ -654,12 +654,12 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 <DraftInput
                   value={
                     isCreate
-                      ? val!.cwd
+                      ? val?.cwd
                       : eff("adapterConfig", "cwd", String(config.cwd ?? ""))
                   }
                   onCommit={(v) =>
                     isCreate
-                      ? set!({ cwd: v })
+                      ? set?.({ cwd: v })
                       : mark("adapterConfig", "cwd", v || undefined)
                   }
                   immediate
@@ -676,8 +676,8 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
             <>
               <Field label="Prompt Template" hint={help.promptTemplate}>
                 <MarkdownEditor
-                  value={val!.promptTemplate}
-                  onChange={(v) => set!({ promptTemplate: v })}
+                  value={val?.promptTemplate}
+                  onChange={(v) => set?.({ promptTemplate: v })}
                   placeholder="You are agent {{ agent.name }}. Your role is {{ agent.role }}..."
                   contentClassName="min-h-[88px] text-sm font-mono"
                   imageUploadHandler={async (file) => {
@@ -710,12 +710,12 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 <DraftInput
                   value={
                     isCreate
-                      ? val!.command
+                      ? val?.command
                       : eff("adapterConfig", "command", String(config.command ?? ""))
                   }
                   onCommit={(v) =>
                     isCreate
-                      ? set!({ command: v })
+                      ? set?.({ command: v })
                       : mark("adapterConfig", "command", v || null)
                   }
                   immediate
@@ -738,7 +738,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 value={currentModelId}
                 onChange={(v) =>
                   isCreate
-                    ? set!({ model: v })
+                    ? set?.({ model: v })
                     : mark("adapterConfig", "model", v || undefined)
                 }
                 open={modelOpen}
@@ -771,7 +771,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                     options={thinkingEffortOptions}
                     onChange={(v) =>
                       isCreate
-                        ? set!({ thinkingEffort: v })
+                        ? set?.({ thinkingEffort: v })
                         : mark("adapterConfig", thinkingEffortKey, v || undefined)
                     }
                     open={thinkingEffortOpen}
@@ -821,12 +821,12 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 <DraftInput
                   value={
                     isCreate
-                      ? val!.extraArgs
+                      ? val?.extraArgs
                       : eff("adapterConfig", "extraArgs", formatArgList(config.extraArgs))
                   }
                   onCommit={(v) =>
                     isCreate
-                      ? set!({ extraArgs: v })
+                      ? set?.({ extraArgs: v })
                       : mark("adapterConfig", "extraArgs", v ? parseCommaArgs(v) : null)
                   }
                   immediate
@@ -839,7 +839,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 <EnvVarEditor
                   value={
                     isCreate
-                      ? ((val!.envBindings ?? EMPTY_ENV) as Record<string, EnvBinding>)
+                      ? ((val?.envBindings ?? EMPTY_ENV) as Record<string, EnvBinding>)
                       : ((eff("adapterConfig", "env", (config.env ?? EMPTY_ENV) as Record<string, EnvBinding>))
                       )
                   }
@@ -850,7 +850,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                   }}
                   onChange={(env) =>
                     isCreate
-                      ? set!({ envBindings: env ?? {}, envVars: "" })
+                      ? set?.({ envBindings: env ?? {}, envVars: "" })
                       : mark("adapterConfig", "env", env)
                   }
                 />
@@ -900,14 +900,14 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
             <ToggleWithNumber
               label="Heartbeat on interval"
               hint={help.heartbeatInterval}
-              checked={val!.heartbeatEnabled}
-              onCheckedChange={(v) => set!({ heartbeatEnabled: v })}
-              number={val!.intervalSec}
-              onNumberChange={(v) => set!({ intervalSec: v })}
+              checked={val?.heartbeatEnabled}
+              onCheckedChange={(v) => set?.({ heartbeatEnabled: v })}
+              number={val?.intervalSec}
+              onNumberChange={(v) => set?.({ intervalSec: v })}
               numberLabel="sec"
               numberPrefix="Run heartbeat every"
               numberHint={help.intervalSec}
-              showNumber={val!.heartbeatEnabled}
+              showNumber={val?.heartbeatEnabled}
             />
           </div>
         </div>
@@ -1169,7 +1169,7 @@ function EnvVarEditor({
       valueRef.current = value;
       setRows(toRows(value));
     }
-  }, [value]);
+  }, [value, toRows]);
 
   function emit(nextRows: Row[]) {
     const rec: Record<string, EnvBinding> = {};
@@ -1473,7 +1473,6 @@ function ModelDropdown({
               placeholder={creatable ? "Search models... (type to create)" : "Search models..."}
               value={modelSearch}
               onChange={(e) => setModelSearch(e.target.value)}
-              autoFocus
             />
             {modelSearch && (
               <button

@@ -65,7 +65,7 @@ export function buildTranscript(
 
   const trailing = stdoutBuffer.trim();
   if (trailing) {
-    const ts = chunks.length > 0 ? chunks[chunks.length - 1]!.ts : new Date().toISOString();
+    const ts = chunks.length > 0 ? chunks[chunks.length - 1]?.ts : new Date().toISOString();
     appendTranscriptEntries(entries, parseLine(trailing, ts).map((entry) => redactTranscriptEntryPaths(entry, redactionOptions)));
   }
 

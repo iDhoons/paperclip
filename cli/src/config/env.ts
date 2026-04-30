@@ -62,7 +62,7 @@ export function loadAgentJwtEnvFile(filePath = resolveEnvFilePath()): void {
 export function readAgentJwtSecretFromEnv(configPath?: string): string | null {
   loadAgentJwtEnvFile(resolveEnvFilePath(configPath));
   const raw = process.env[JWT_SECRET_ENV_KEY];
-  return isNonEmpty(raw) ? raw!.trim() : null;
+  return isNonEmpty(raw) ? raw?.trim() : null;
 }
 
 export function readAgentJwtSecretFromEnvFile(filePath = resolveEnvFilePath()): string | null {
@@ -71,7 +71,7 @@ export function readAgentJwtSecretFromEnvFile(filePath = resolveEnvFilePath()): 
   const raw = fs.readFileSync(filePath, "utf-8");
   const values = parseEnvFile(raw);
   const value = values[JWT_SECRET_ENV_KEY];
-  return isNonEmpty(value) ? value!.trim() : null;
+  return isNonEmpty(value) ? value?.trim() : null;
 }
 
 export function ensureAgentJwtSecret(configPath?: string): { secret: string; created: boolean } {

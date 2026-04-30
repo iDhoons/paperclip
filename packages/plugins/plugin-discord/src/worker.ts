@@ -47,7 +47,7 @@ async function refreshProjects(ctx: PluginContext) {
   projectCache = await ctx.projects.list({ companyId: companyId! });
 }
 
-function findProject(query: string): Project | undefined {
+function _findProject(query: string): Project | undefined {
   const q = query.toLowerCase().trim();
   if (!q) return undefined;
   // exact match first, then prefix, then includes
@@ -275,7 +275,7 @@ const plugin = definePlugin({
       ctx.logger.error("No companies found — cannot create issues");
       return;
     }
-    companyId = companies[0]!.id;
+    companyId = companies[0]?.id;
 
     // Cache projects for autocomplete
     await refreshProjects(ctx);
@@ -357,7 +357,7 @@ const plugin = definePlugin({
     return {
       status: connected ? "ok" : "degraded",
       message: connected
-        ? `Connected as ${discordClient!.user?.tag}`
+        ? `Connected as ${discordClient?.user?.tag}`
         : "Discord client not connected",
     };
   },

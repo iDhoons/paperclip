@@ -29,7 +29,7 @@ export function OpenCodeLocalConfigFields({
             <DraftInput
               value={
                 isCreate
-                  ? values!.instructionsFilePath ?? ""
+                  ? values?.instructionsFilePath ?? ""
                   : eff(
                       "adapterConfig",
                       "instructionsFilePath",
@@ -38,7 +38,7 @@ export function OpenCodeLocalConfigFields({
               }
               onCommit={(v) =>
                 isCreate
-                  ? set!({ instructionsFilePath: v })
+                  ? set?.({ instructionsFilePath: v })
                   : mark("adapterConfig", "instructionsFilePath", v || undefined)
               }
               immediate
@@ -54,7 +54,7 @@ export function OpenCodeLocalConfigFields({
         hint={help.dangerouslySkipPermissions}
         checked={
           isCreate
-            ? values!.dangerouslySkipPermissions
+            ? values?.dangerouslySkipPermissions
             : eff(
                 "adapterConfig",
                 "dangerouslySkipPermissions",
@@ -63,7 +63,7 @@ export function OpenCodeLocalConfigFields({
         }
         onChange={(v) =>
           isCreate
-            ? set!({ dangerouslySkipPermissions: v })
+            ? set?.({ dangerouslySkipPermissions: v })
             : mark("adapterConfig", "dangerouslySkipPermissions", v)
         }
       />

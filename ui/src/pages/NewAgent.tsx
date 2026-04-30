@@ -19,8 +19,7 @@ import { cn, agentUrl } from "../lib/utils";
 import { roleLabels } from "../components/agent-config-primitives";
 import { AgentConfigForm, type CreateConfigValues } from "../components/AgentConfigForm";
 import { defaultCreateValues } from "../components/agent-config-defaults";
-import { getUIAdapter, listUIAdapters } from "../adapters";
-import { useDisabledAdaptersSync } from "../adapters/use-disabled-adapters";
+import { getUIAdapter, } from "../adapters";
 import { isValidAdapterType } from "../adapters/metadata";
 import { ReportsToPicker } from "../components/ReportsToPicker";
 import {
@@ -106,7 +105,7 @@ export function NewAgent() {
       if (!name) setName("CEO");
       if (!title) setTitle("CEO");
     }
-  }, [isFirstAgent]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isFirstAgent, title, name]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const requested = presetAdapterType;
@@ -216,7 +215,6 @@ export function NewAgent() {
             placeholder="Agent name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            autoFocus
           />
         </div>
 

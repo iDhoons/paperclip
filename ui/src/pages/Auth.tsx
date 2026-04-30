@@ -111,7 +111,6 @@ export function AuthPage() {
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   autoComplete="name"
-                  autoFocus
                 />
               </div>
             )}
@@ -125,7 +124,6 @@ export function AuthPage() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
-                autoFocus={mode === "sign_in"}
               />
             </div>
             <div>

@@ -517,7 +517,7 @@ describe("realizeExecutionWorkspace", () => {
     await fs.mkdir(sharedConfigDir, { recursive: true });
     await fs.writeFile(
       sharedConfigPath,
-      JSON.stringify(
+      `${JSON.stringify(
         {
           $meta: {
             version: 1,
@@ -573,7 +573,7 @@ describe("realizeExecutionWorkspace", () => {
         },
         null,
         2,
-      ) + "\n",
+      )}\n`,
       "utf8",
     );
     await fs.writeFile(sharedEnvPath, 'DATABASE_URL="postgres://worktree:test@db.example.com:6543/paperclip"\n', "utf8");
@@ -904,7 +904,7 @@ describe("realizeExecutionWorkspace", () => {
     // The worktree should have been created successfully (baseRef resolved to "master")
     const worktreeOp = operations.find(op => op.phase === "worktree_prepare" && op.metadata?.created);
     expect(worktreeOp).toBeDefined();
-    expect(worktreeOp!.metadata!.baseRef).toBe("master");
+    expect(worktreeOp?.metadata?.baseRef).toBe("master");
   });
 
   it("auto-detects the default branch via symbolic-ref when origin/HEAD is set", async () => {
@@ -955,7 +955,7 @@ describe("realizeExecutionWorkspace", () => {
     expect(workspace.created).toBe(true);
     const worktreeOp = operations.find(op => op.phase === "worktree_prepare" && op.metadata?.created);
     expect(worktreeOp).toBeDefined();
-    expect(worktreeOp!.metadata!.baseRef).toBe("master");
+    expect(worktreeOp?.metadata?.baseRef).toBe("master");
   });
 
   it("removes a created git worktree and branch during cleanup", async () => {
@@ -1210,7 +1210,7 @@ describe("ensureRuntimeServicesForRun", () => {
     expect(first).toHaveLength(1);
     expect(first[0]?.reused).toBe(false);
     expect(first[0]?.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
-    const response = await fetch(first[0]!.url!);
+    const response = await fetch(first[0]?.url!);
     expect(await response.text()).toBe("ok");
 
     const second = await ensureRuntimeServicesForRun({
@@ -1343,10 +1343,10 @@ describe("ensureRuntimeServicesForRun", () => {
     expect(executionServices[0]?.cwd).toBe(worktreeWorkspaceRoot);
     expect(executionServices[0]?.url).not.toBe(primaryServices[0]?.url);
 
-    const primaryResponse = await fetch(primaryServices[0]!.url!);
+    const primaryResponse = await fetch(primaryServices[0]?.url!);
     expect(await primaryResponse.text()).toBe(path.join(primaryWorkspaceRoot, ".paperclip", "runtime-services"));
 
-    const executionResponse = await fetch(executionServices[0]!.url!);
+    const executionResponse = await fetch(executionServices[0]?.url!);
     expect(await executionResponse.text()).toBe(path.join(worktreeWorkspaceRoot, ".paperclip", "runtime-services"));
   });
 
@@ -1481,7 +1481,7 @@ describe("ensureRuntimeServicesForRun", () => {
     leasedRunIds.delete(runId);
     await new Promise((resolve) => setTimeout(resolve, 250));
 
-    await expect(fetch(services[0]!.url!)).rejects.toThrow();
+    await expect(fetch(services[0]?.url!)).rejects.toThrow();
   });
 
   it("does not stop services in sibling directories when matching by workspace cwd", async () => {
@@ -1536,7 +1536,7 @@ describe("ensureRuntimeServicesForRun", () => {
       workspaceCwd: targetWorkspaceRoot,
     });
 
-    const response = await fetch(services[0]!.url!);
+    const response = await fetch(services[0]?.url!);
     expect(await response.text()).toBe("ok");
 
     await releaseRuntimeServicesForRun(runId);
@@ -1705,7 +1705,7 @@ describeEmbeddedPostgres("workspace runtime startup reconciliation", () => {
     expect(services).toHaveLength(1);
     const service = services[0];
     expect(service?.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
-    await expect(fetch(service!.url!)).resolves.toMatchObject({ ok: true });
+    await expect(fetch(service?.url!)).resolves.toMatchObject({ ok: true });
 
     await resetRuntimeServicesForTests();
 
@@ -1715,7 +1715,7 @@ describeEmbeddedPostgres("workspace runtime startup reconciliation", () => {
     const persisted = await db
       .select()
       .from(workspaceRuntimeServices)
-      .where(eq(workspaceRuntimeServices.id, service!.id))
+      .where(eq(workspaceRuntimeServices.id, service?.id))
       .then((rows) => rows[0] ?? null);
     expect(persisted?.status).toBe("running");
     expect(persisted?.providerRef).toMatch(/^\d+$/);
@@ -1726,7 +1726,7 @@ describeEmbeddedPostgres("workspace runtime startup reconciliation", () => {
       workspaceCwd: workspace.cwd,
     });
 
-    await expect(fetch(service!.url!)).rejects.toThrow();
+    await expect(fetch(service?.url!)).rejects.toThrow();
   });
 
   it("marks persisted local services stopped when the registry pid is stale", async () => {
@@ -1927,12 +1927,12 @@ describeEmbeddedPostgres("workspace runtime startup reconciliation", () => {
     leasedRunIds.delete(runId);
     await new Promise((resolve) => setTimeout(resolve, 250));
 
-    await expect(fetch(services[0]!.url!)).rejects.toThrow();
+    await expect(fetch(services[0]?.url!)).rejects.toThrow();
 
     const persisted = await db
       .select()
       .from(workspaceRuntimeServices)
-      .where(eq(workspaceRuntimeServices.id, services[0]!.id))
+      .where(eq(workspaceRuntimeServices.id, services[0]?.id))
       .then((rows) => rows[0] ?? null);
 
     expect(persisted?.status).toBe("stopped");

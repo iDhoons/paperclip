@@ -136,7 +136,6 @@ export function parseCursorJsonl(stdout: string) {
       usage.cachedInputTokens += asNumber(cache.read, 0);
       usage.outputTokens += asNumber(tokens.output, 0);
       totalCostUsd += asNumber(part.cost, 0);
-      continue;
     }
   }
 

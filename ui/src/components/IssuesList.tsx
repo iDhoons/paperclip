@@ -260,8 +260,9 @@ export function IssuesList({
       updateView({ collapsedParents: pruned });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [issues]);
+  }, [issues, viewState.collapsedParents.length, viewState.collapsedParents.filter, updateView]);
 
+  // biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
   const { data: searchedIssues = [] } = useQuery({
     queryKey: [
       ...queryKeys.issues.search(selectedCompanyId!, normalizedIssueSearch, projectId),
@@ -324,7 +325,7 @@ export function IssuesList({
             : (agentName(key) ?? key.slice(0, 8)),
       items: groups[key]!,
     }));
-  }, [filtered, viewState.groupBy, agents, agentName, currentUserId]);
+  }, [filtered, viewState.groupBy, agentName, currentUserId]);
 
   const newIssueDefaults = useCallback((groupKey?: string) => {
     const defaults: Record<string, string> = {};
@@ -831,7 +832,6 @@ export function IssuesList({
                                   placeholder="Search assignees..."
                                   value={assigneeSearch}
                                   onChange={(e) => setAssigneeSearch(e.target.value)}
-                                  autoFocus
                                 />
                                 <div className="max-h-48 overflow-y-auto overscroll-contain">
                                   <button

@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { testEnvironment } from "@paperclipai/adapter-cursor-local/server";
 
-async function writeFakeAgentCommand(binDir: string, argsCapturePath: string): Promise<string> {
+async function writeFakeAgentCommand(binDir: string, _argsCapturePath: string): Promise<string> {
   const commandPath = path.join(binDir, "agent");
   const script = `#!/usr/bin/env node
 const fs = require("node:fs");

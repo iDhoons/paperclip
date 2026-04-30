@@ -91,7 +91,7 @@ import {
   resolveIssueWorkspaceName,
   resolveInboxSelectionIndex,
   saveInboxIssueColumns,
-  InboxApprovalFilter,
+  type InboxApprovalFilter,
   type InboxIssueColumn,
   saveLastInboxTab,
   shouldShowInboxSection,
@@ -129,10 +129,10 @@ function readIssueIdFromRun(run: HeartbeatRun): string | null {
   const context = run.contextSnapshot;
   if (!context) return null;
 
-  const issueId = context["issueId"];
+  const issueId = context.issueId;
   if (typeof issueId === "string" && issueId.length > 0) return issueId;
 
-  const taskId = context["taskId"];
+  const taskId = context.taskId;
   if (typeof taskId === "string" && taskId.length > 0) return taskId;
 
   return null;
@@ -1754,7 +1754,7 @@ export function Inbox() {
           <div>
             <div ref={listRef} className="overflow-hidden rounded-xl border border-border bg-card">
               {filteredWorkItems.flatMap((item, index) => {
-                const wrapItem = (key: string, isSelected: boolean, child: ReactNode) => (
+                const wrapItem = (key: string, _isSelected: boolean, child: ReactNode) => (
                   <div
                     key={`sel-${key}`}
                     data-inbox-item
@@ -1980,8 +1980,8 @@ export function Inbox() {
                   >
                     <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
                     <span className="text-sm">
-                      <span className="font-medium">{dashboard!.agents.error}</span>{" "}
-                      {dashboard!.agents.error === 1 ? "agent has" : "agents have"} errors
+                      <span className="font-medium">{dashboard?.agents.error}</span>{" "}
+                      {dashboard?.agents.error === 1 ? "agent has" : "agents have"} errors
                     </span>
                   </Link>
                   <button
@@ -2003,7 +2003,7 @@ export function Inbox() {
                     <AlertTriangle className="h-4 w-4 shrink-0 text-yellow-400" />
                     <span className="text-sm">
                       Budget at{" "}
-                      <span className="font-medium">{dashboard!.costs.monthUtilizationPercent}%</span>{" "}
+                      <span className="font-medium">{dashboard?.costs.monthUtilizationPercent}%</span>{" "}
                       utilization this month
                     </span>
                   </Link>

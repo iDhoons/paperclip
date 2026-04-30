@@ -285,7 +285,7 @@ export function ProjectWorkspaceDetail() {
 
   const updateWorkspace = useMutation({
     mutationFn: (patch: Record<string, unknown>) =>
-      projectsApi.updateWorkspace(project!.id, routeWorkspaceId, patch, lookupCompanyId),
+      projectsApi.updateWorkspace(project?.id, routeWorkspaceId, patch, lookupCompanyId),
     onSuccess: () => {
       invalidateProject();
       setErrorMessage(null);
@@ -296,7 +296,7 @@ export function ProjectWorkspaceDetail() {
   });
 
   const setPrimaryWorkspace = useMutation({
-    mutationFn: () => projectsApi.updateWorkspace(project!.id, routeWorkspaceId, { isPrimary: true }, lookupCompanyId),
+    mutationFn: () => projectsApi.updateWorkspace(project?.id, routeWorkspaceId, { isPrimary: true }, lookupCompanyId),
     onSuccess: () => {
       invalidateProject();
       setErrorMessage(null);
@@ -308,8 +308,8 @@ export function ProjectWorkspaceDetail() {
 
   const controlRuntimeServices = useMutation({
     mutationFn: (action: "start" | "stop" | "restart") =>
-      projectsApi.controlWorkspaceRuntimeServices(project!.id, routeWorkspaceId, action, lookupCompanyId),
-    onSuccess: (result, action) => {
+      projectsApi.controlWorkspaceRuntimeServices(project?.id, routeWorkspaceId, action, lookupCompanyId),
+    onSuccess: (_result, action) => {
       invalidateProject();
       setErrorMessage(null);
       setRuntimeActionMessage(

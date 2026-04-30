@@ -130,7 +130,7 @@ export function issueRoutes(
       res.status(403).json({ error: "Forbidden" });
       return false;
     }
-    if (actorAgent.role === "ceo" || Boolean(actorAgent.permissions?.canCreateAgents)) return true;
+    if (actorAgent.role === "ceo" || actorAgent.permissions?.canCreateAgents) return true;
     res.status(403).json({ error: "Missing permission to link approvals" });
     return false;
   }
@@ -223,8 +223,7 @@ export function issueRoutes(
     if ((!runToInterrupt || runToInterrupt.status !== "running") && issue.assigneeAgentId) {
       const activeRun = await heartbeat.getActiveRunForAgent(issue.assigneeAgentId);
       const activeIssueId =
-        activeRun &&
-        activeRun.contextSnapshot &&
+        activeRun?.contextSnapshot &&
         typeof activeRun.contextSnapshot === "object" &&
         typeof (activeRun.contextSnapshot as Record<string, unknown>).issueId === "string"
           ? ((activeRun.contextSnapshot as Record<string, unknown>).issueId as string)
@@ -292,7 +291,7 @@ export function issueRoutes(
   }
 
   // Resolve issue identifiers (e.g. "PAP-39") to UUIDs for all /issues/:id routes
-  router.param("id", async (req, res, next, rawId) => {
+  router.param("id", async (req, _res, next, rawId) => {
     try {
       req.params.id = await normalizeIssueIdentifier(rawId);
       next();
@@ -302,7 +301,7 @@ export function issueRoutes(
   });
 
   // Resolve issue identifiers (e.g. "PAP-39") to UUIDs for company-scoped attachment routes.
-  router.param("issueId", async (req, res, next, rawId) => {
+  router.param("issueId", async (req, _res, next, rawId) => {
     try {
       req.params.issueId = await normalizeIssueIdentifier(rawId);
       next();
@@ -2051,7 +2050,7 @@ export function issueRoutes(
     res.setHeader("Content-Length", String(attachment.byteSize || object.contentLength || 0));
     res.setHeader("Cache-Control", "private, max-age=60");
     const filename = attachment.originalFilename ?? "attachment";
-    res.setHeader("Content-Disposition", `inline; filename=\"${filename.replaceAll("\"", "")}\"`);
+    res.setHeader("Content-Disposition", `inline; filename="${filename.replaceAll("\"", "")}"`);
 
     object.stream.on("error", (err) => {
       next(err);

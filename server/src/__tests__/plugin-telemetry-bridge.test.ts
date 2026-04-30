@@ -17,6 +17,7 @@ function createEventBusStub() {
         subscribe: vi.fn(),
       };
     },
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   } as any;
 }
 

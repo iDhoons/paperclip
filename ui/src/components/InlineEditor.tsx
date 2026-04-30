@@ -5,7 +5,7 @@ import { useAutosaveIndicator } from "../hooks/useAutosaveIndicator";
 
 interface InlineEditorProps {
   value: string;
-  onSave: (value: string) => void | Promise<unknown>;
+  onSave: (value: string) => undefined | Promise<unknown>;
   as?: "h1" | "h2" | "p" | "span";
   className?: string;
   placeholder?: string;

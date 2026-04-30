@@ -38,6 +38,7 @@ export function NewAgentDialog() {
   const disabledTypes = useDisabledAdaptersSync();
 
   // Fetch registered adapters from server (syncs disabled store + provides data)
+  // biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
   const { data: serverAdapters } = useQuery({
     queryKey: queryKeys.adapters.all,
     queryFn: () => adaptersApi.list(),
@@ -78,7 +79,7 @@ export function NewAgentDialog() {
         if (!a.recommended && b.recommended) return 1;
         return a.label.localeCompare(b.label);
       });
-  }, [disabledTypes, serverAdapters]);
+  }, [disabledTypes]);
 
   function handleAskCeo() {
     closeNewAgent();

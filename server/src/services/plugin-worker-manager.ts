@@ -418,6 +418,7 @@ export function createPluginWorkerHandle(
     if (!childProcess?.stdin?.writable) {
       throw new Error(`Worker process for plugin "${pluginId}" is not writable`);
     }
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const serialized = serializeMessage(message as any);
     childProcess.stdin.write(serialized);
   }
@@ -745,7 +746,7 @@ export function createPluginWorkerHandle(
   }
 
   function rejectAllPending(error: Error): void {
-    for (const [id, pending] of pendingRequests) {
+    for (const [_id, pending] of pendingRequests) {
       clearTimeout(pending.timer);
       pending.resolve(
         createErrorResponse(
@@ -765,7 +766,7 @@ export function createPluginWorkerHandle(
   function computeBackoffMs(): number {
     // Exponential backoff: MIN_BACKOFF * MULTIPLIER^(consecutiveCrashes - 1)
     const delay =
-      MIN_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, consecutiveCrashes - 1);
+      MIN_BACKOFF_MS * BACKOFF_MULTIPLIER ** (consecutiveCrashes - 1);
     // Add jitter: ±25%
     const jitter = delay * 0.25 * (Math.random() * 2 - 1);
     return Math.min(Math.round(delay + jitter), MAX_BACKOFF_MS);
@@ -836,7 +837,7 @@ export function createPluginWorkerHandle(
         initParams,
         INITIALIZE_TIMEOUT_MS,
       ) as { ok?: boolean; supportedMethods?: string[] } | undefined;
-      if (!result || !result.ok) {
+      if (!result?.ok) {
         throw new Error("Worker initialize returned ok=false");
       }
       supportedMethods = result.supportedMethods ?? [];

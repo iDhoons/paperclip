@@ -19,7 +19,6 @@ import type {
   PaperclipPluginManifestV1,
   PluginLauncherBounds,
   PluginLauncherRenderContextSnapshot,
-  PluginLauncherRenderEnvironment,
   PluginStateScopeKind,
   Company,
   Project,
@@ -363,17 +362,17 @@ export interface HostToWorkerMethods {
   /** @see PLUGIN_SPEC.md §13.2 */
   health: [params: Record<string, never>, result: PluginHealthDiagnostics];
   /** @see PLUGIN_SPEC.md §12.5 */
-  shutdown: [params: Record<string, never>, result: void];
+  shutdown: [params: Record<string, never>, result: undefined];
   /** @see PLUGIN_SPEC.md §13.3 */
   validateConfig: [params: ValidateConfigParams, result: PluginConfigValidationResult];
   /** @see PLUGIN_SPEC.md §13.4 */
-  configChanged: [params: ConfigChangedParams, result: void];
+  configChanged: [params: ConfigChangedParams, result: undefined];
   /** @see PLUGIN_SPEC.md §13.5 */
-  onEvent: [params: OnEventParams, result: void];
+  onEvent: [params: OnEventParams, result: undefined];
   /** @see PLUGIN_SPEC.md §13.6 */
-  runJob: [params: RunJobParams, result: void];
+  runJob: [params: RunJobParams, result: undefined];
   /** @see PLUGIN_SPEC.md §13.7 */
-  handleWebhook: [params: PluginWebhookInput, result: void];
+  handleWebhook: [params: PluginWebhookInput, result: undefined];
   /** @see PLUGIN_SPEC.md §13.8 */
   getData: [params: GetDataParams, result: unknown];
   /** @see PLUGIN_SPEC.md §13.9 */
@@ -425,11 +424,11 @@ export interface WorkerToHostMethods {
   ];
   "state.set": [
     params: { scopeKind: string; scopeId?: string; namespace?: string; stateKey: string; value: unknown },
-    result: void,
+    result: undefined,
   ];
   "state.delete": [
     params: { scopeKind: string; scopeId?: string; namespace?: string; stateKey: string },
-    result: void,
+    result: undefined,
   ];
 
   // Entities
@@ -482,11 +481,11 @@ export interface WorkerToHostMethods {
   // Events
   "events.emit": [
     params: { name: string; companyId: string; payload: unknown },
-    result: void,
+    result: undefined,
   ];
   "events.subscribe": [
     params: { eventPattern: string; filter?: Record<string, unknown> | null },
-    result: void,
+    result: undefined,
   ];
 
   // HTTP
@@ -510,25 +509,25 @@ export interface WorkerToHostMethods {
       entityId?: string;
       metadata?: Record<string, unknown>;
     },
-    result: void,
+    result: undefined,
   ];
 
   // Metrics
   "metrics.write": [
     params: { name: string; value: number; tags?: Record<string, string> },
-    result: void,
+    result: undefined,
   ];
 
   // Telemetry
   "telemetry.track": [
     params: { eventName: string; dimensions?: Record<string, string | number | boolean> },
-    result: void,
+    result: undefined,
   ];
 
   // Logger
   "log": [
     params: { level: "info" | "warn" | "error" | "debug"; message: string; meta?: Record<string, unknown> },
-    result: void,
+    result: undefined,
   ];
 
   // Companies (read)
@@ -633,7 +632,7 @@ export interface WorkerToHostMethods {
   ];
   "issues.documents.delete": [
     params: { issueId: string; key: string; companyId: string },
-    result: void,
+    result: undefined,
   ];
 
   // Agents (read)
@@ -675,7 +674,7 @@ export interface WorkerToHostMethods {
   ];
   "agents.sessions.close": [
     params: { sessionId: string; companyId: string },
-    result: void,
+    result: undefined,
   ];
 
   // Goals
@@ -1029,9 +1028,6 @@ export function parseMessage(line: string): JsonRpcMessage {
  */
 export class JsonRpcParseError extends Error {
   override readonly name = "JsonRpcParseError";
-  constructor(message: string) {
-    super(message);
-  }
 }
 
 /**

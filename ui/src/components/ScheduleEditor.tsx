@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight } from "lucide-react";
 
 type SchedulePreset = "every_minute" | "every_hour" | "every_day" | "weekdays" | "weekly" | "monthly" | "custom";
 
@@ -50,7 +49,7 @@ function parseCronToPreset(cron: string): {
 } {
   const defaults = { hour: "10", minute: "0", dayOfWeek: "1", dayOfMonth: "1" };
 
-  if (!cron || !cron.trim()) {
+  if (!cron?.trim()) {
     return { preset: "every_day", ...defaults };
   }
 

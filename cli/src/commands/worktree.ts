@@ -270,6 +270,7 @@ function buildS3ObjectKey(prefix: string, objectKey: string): string {
   return prefix ? `${prefix}/${objectKey}` : objectKey;
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 const dynamicImport = new Function("specifier", "return import(specifier);") as (specifier: string) => Promise<any>;
 
 function createConfiguredStorageFromPaperclipConfig(config: PaperclipConfig): ConfiguredStorage {
@@ -290,6 +291,7 @@ function createConfiguredStorageFromPaperclipConfig(config: PaperclipConfig): Co
   }
 
   const prefix = normalizeS3Prefix(config.storage.s3.prefix);
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   let s3ClientPromise: Promise<any> | null = null;
   async function getS3Client() {
     if (!s3ClientPromise) {
@@ -1120,8 +1122,6 @@ export async function worktreeMakeCommand(nameArg: string, opts: WorktreeMakeOpt
       name,
       sourceConfigPathOverride: sourceConfigPath,
     });
-  } catch (error) {
-    throw error;
   } finally {
     process.chdir(originalCwd);
   }

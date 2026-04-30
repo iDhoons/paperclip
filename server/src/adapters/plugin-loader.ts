@@ -155,7 +155,7 @@ function validateAdapterModule(mod: unknown, packageName: string): ServerAdapter
   }
 
   const adapterModule = createServerAdapter() as ServerAdapterModule;
-  if (!adapterModule || !adapterModule.type) {
+  if (!adapterModule?.type) {
     throw new Error(
       `createServerAdapter() from "${packageName}" returned an invalid module (missing "type").`,
     );

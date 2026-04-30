@@ -7,6 +7,7 @@ import { SwipeToArchive } from "./SwipeToArchive";
 
 // Tell React this environment uses act() for event flushing.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 function dispatchTouchEvent(
@@ -77,7 +78,7 @@ describe("SwipeToArchive", () => {
     });
 
     act(() => {
-      button!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     });
 
     expect(onClick).not.toHaveBeenCalled();
@@ -112,7 +113,7 @@ describe("SwipeToArchive", () => {
     expect(button).not.toBeNull();
 
     act(() => {
-      button!.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     });
 
     expect(onClick).toHaveBeenCalledTimes(1);

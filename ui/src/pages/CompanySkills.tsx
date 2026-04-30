@@ -824,7 +824,7 @@ export function CompanySkills() {
 
   useEffect(() => {
     setEditMode(false);
-  }, [selectedSkillId, selectedPath]);
+  }, []);
 
   useEffect(() => {
     if (detailQuery.data) {

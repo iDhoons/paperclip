@@ -7,7 +7,6 @@ import {
   registerUIAdapter,
   unregisterUIAdapter,
 } from "./registry";
-import { processUIAdapter } from "./process";
 import { SchemaConfigFields } from "./schema-config-fields";
 
 const externalUIAdapter: UIAdapterModule = {

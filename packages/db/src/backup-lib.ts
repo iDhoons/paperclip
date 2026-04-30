@@ -561,7 +561,7 @@ export async function runDatabaseBackup(opts: RunDatabaseBackupOptions): Promise
       `;
       const colNames = cols.map((c) => `"${c.column_name}"`).join(", ");
 
-      emit(`-- Data for: ${schema_name}.${tablename} (${count[0]!.n} rows)`);
+      emit(`-- Data for: ${schema_name}.${tablename} (${count[0]?.n} rows)`);
 
       const rows = await sql.unsafe(`SELECT * FROM ${qualifiedTableName}`).values();
       const nullifiedColumns = nullifiedColumnsByTable.get(tablename) ?? new Set<string>();

@@ -281,7 +281,7 @@ const THEMES: Record<OrgChartStyle, StyleTheme> = {
     roleColor: "#8b949e",
     font: "'JetBrains Mono', 'SF Mono', monospace",
     watermarkColor: "rgba(139,148,158,0.3)",
-    defs: (w, h) => `
+    defs: (_w, _h) => `
       <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
         <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(48,54,61,0.25)" stroke-width="1"/>
       </pattern>`,

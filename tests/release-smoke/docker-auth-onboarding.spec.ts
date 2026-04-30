@@ -81,7 +81,7 @@ test.describe("Docker authenticated onboarding smoke", () => {
     expect(company).toBeTruthy();
 
     const agentsRes = await page.request.get(
-      `${baseUrl}/api/companies/${company!.id}/agents`
+      `${baseUrl}/api/companies/${company?.id}/agents`
     );
     expect(agentsRes.ok()).toBe(true);
     const agents = (await agentsRes.json()) as Array<{
@@ -92,11 +92,11 @@ test.describe("Docker authenticated onboarding smoke", () => {
     }>;
     const ceoAgent = agents.find((entry) => entry.name === AGENT_NAME);
     expect(ceoAgent).toBeTruthy();
-    expect(ceoAgent!.role).toBe("ceo");
-    expect(ceoAgent!.adapterType).not.toBe("process");
+    expect(ceoAgent?.role).toBe("ceo");
+    expect(ceoAgent?.adapterType).not.toBe("process");
 
     const issuesRes = await page.request.get(
-      `${baseUrl}/api/companies/${company!.id}/issues`
+      `${baseUrl}/api/companies/${company?.id}/issues`
     );
     expect(issuesRes.ok()).toBe(true);
     const issues = (await issuesRes.json()) as Array<{
@@ -106,12 +106,12 @@ test.describe("Docker authenticated onboarding smoke", () => {
     }>;
     const issue = issues.find((entry) => entry.title === TASK_TITLE);
     expect(issue).toBeTruthy();
-    expect(issue!.assigneeAgentId).toBe(ceoAgent!.id);
+    expect(issue?.assigneeAgentId).toBe(ceoAgent?.id);
 
     await expect.poll(
       async () => {
         const runsRes = await page.request.get(
-          `${baseUrl}/api/companies/${company!.id}/heartbeat-runs?agentId=${ceoAgent!.id}`
+          `${baseUrl}/api/companies/${company?.id}/heartbeat-runs?agentId=${ceoAgent?.id}`
         );
         expect(runsRes.ok()).toBe(true);
         const runs = (await runsRes.json()) as Array<{
@@ -119,7 +119,7 @@ test.describe("Docker authenticated onboarding smoke", () => {
           invocationSource: string;
           status: string;
         }>;
-        const latestRun = runs.find((entry) => entry.agentId === ceoAgent!.id);
+        const latestRun = runs.find((entry) => entry.agentId === ceoAgent?.id);
         return latestRun
           ? {
               invocationSource: latestRun.invocationSource,

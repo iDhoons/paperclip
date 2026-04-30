@@ -36,7 +36,7 @@ export function CodexLocalConfigFields({
             <DraftInput
               value={
                 isCreate
-                  ? values!.instructionsFilePath ?? ""
+                  ? values?.instructionsFilePath ?? ""
                   : eff(
                       "adapterConfig",
                       "instructionsFilePath",
@@ -45,7 +45,7 @@ export function CodexLocalConfigFields({
               }
               onCommit={(v) =>
                 isCreate
-                  ? set!({ instructionsFilePath: v })
+                  ? set?.({ instructionsFilePath: v })
                   : mark("adapterConfig", "instructionsFilePath", v || undefined)
               }
               immediate
@@ -61,7 +61,7 @@ export function CodexLocalConfigFields({
         hint={help.dangerouslyBypassSandbox}
         checked={
           isCreate
-            ? values!.dangerouslyBypassSandbox
+            ? values?.dangerouslyBypassSandbox
             : eff(
                 "adapterConfig",
                 "dangerouslyBypassApprovalsAndSandbox",
@@ -70,7 +70,7 @@ export function CodexLocalConfigFields({
         }
         onChange={(v) =>
           isCreate
-            ? set!({ dangerouslyBypassSandbox: v })
+            ? set?.({ dangerouslyBypassSandbox: v })
             : mark("adapterConfig", "dangerouslyBypassApprovalsAndSandbox", v)
         }
       />
@@ -79,12 +79,12 @@ export function CodexLocalConfigFields({
         hint={help.search}
         checked={
           isCreate
-            ? values!.search
+            ? values?.search
             : eff("adapterConfig", "search", !!config.search)
         }
         onChange={(v) =>
           isCreate
-            ? set!({ search: v })
+            ? set?.({ search: v })
             : mark("adapterConfig", "search", v)
         }
       />

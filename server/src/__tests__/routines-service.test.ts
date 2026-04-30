@@ -601,7 +601,7 @@ describeEmbeddedPostgres("routine service live-execution coalescing", () => {
     const payload = { ok: true };
     const rawBody = Buffer.from(JSON.stringify(payload));
     const timestampSeconds = String(Math.floor(Date.now() / 1000));
-    const signature = `sha256=${createHmac("sha256", secretMaterial!.webhookSecret)
+    const signature = `sha256=${createHmac("sha256", secretMaterial?.webhookSecret)
       .update(`${timestampSeconds}.`)
       .update(rawBody)
       .digest("hex")}`;

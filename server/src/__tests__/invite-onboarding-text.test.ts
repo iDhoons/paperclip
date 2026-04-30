@@ -30,6 +30,7 @@ describe("buildInviteOnboardingTextDocument", () => {
       updatedAt: new Date("2026-03-04T00:00:00.000Z"),
     } as const;
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const text = buildInviteOnboardingTextDocument(req, "token-123", invite as any, {
       deploymentMode: "local_trusted",
       deploymentExposure: "private",
@@ -72,6 +73,7 @@ describe("buildInviteOnboardingTextDocument", () => {
       updatedAt: new Date("2026-03-04T00:00:00.000Z"),
     } as const;
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const text = buildInviteOnboardingTextDocument(req, "token-456", invite as any, {
       deploymentMode: "authenticated",
       deploymentExposure: "private",
@@ -103,6 +105,7 @@ describe("buildInviteOnboardingTextDocument", () => {
       updatedAt: new Date("2026-03-04T00:00:00.000Z"),
     } as const;
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const text = buildInviteOnboardingTextDocument(req, "token-789", invite as any, {
       deploymentMode: "local_trusted",
       deploymentExposure: "private",

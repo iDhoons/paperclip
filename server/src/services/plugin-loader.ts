@@ -545,15 +545,13 @@ function resolveManifestPath(
   packageRoot: string,
   pkgJson: Record<string, unknown>,
 ): string | null {
-  const paperclipPlugin = pkgJson["paperclipPlugin"];
+  const paperclipPlugin = pkgJson.paperclipPlugin;
   if (
     paperclipPlugin !== null &&
     typeof paperclipPlugin === "object" &&
     !Array.isArray(paperclipPlugin)
   ) {
-    const manifestRelPath = (paperclipPlugin as Record<string, unknown>)[
-      "manifest"
-    ];
+    const manifestRelPath = (paperclipPlugin as Record<string, unknown>).manifest;
     if (typeof manifestRelPath === "string") {
       // NOTE: the resolved path is returned as-is even if the file does not yet
       // exist on disk (e.g. the package has not been built).  Callers MUST guard
@@ -811,8 +809,8 @@ export function pluginLoader(
       resolvedPackagePath = absLocalPath;
       const pkgJson = await readPackageJson(absLocalPath);
       resolvedPackageName =
-        typeof pkgJson?.["name"] === "string"
-          ? pkgJson["name"]
+        typeof pkgJson?.name === "string"
+          ? pkgJson.name
           : path.basename(absLocalPath);
 
       log.info(
@@ -929,7 +927,7 @@ export function pluginLoader(
       // Dynamic import works for both .js (ESM) and .cjs (CJS) manifests
       const mod = await import(manifestPath) as Record<string, unknown>;
       // The manifest may be the default export or the module itself
-      raw = mod["default"] ?? mod;
+      raw = mod.default ?? mod;
     } catch (err) {
       throw new Error(
         `Failed to load manifest module at ${manifestPath}: ${String(err)}`,
@@ -950,8 +948,8 @@ export function pluginLoader(
     const pkgJson = await readPackageJson(packagePath);
     if (!pkgJson) return null;
 
-    const packageName = typeof pkgJson["name"] === "string" ? pkgJson["name"] : "";
-    const version = typeof pkgJson["version"] === "string" ? pkgJson["version"] : "0.0.0";
+    const packageName = typeof pkgJson.name === "string" ? pkgJson.name : "";
+    const version = typeof pkgJson.version === "string" ? pkgJson.version : "0.0.0";
 
     // Determine if this is a plugin package at all
     const hasPaperclipPlugin = "paperclipPlugin" in pkgJson;
@@ -1115,7 +1113,7 @@ export function pluginLoader(
         } catch (err) {
           const pkgJson = await readPackageJson(entryPath);
           const packageName =
-            typeof pkgJson?.["name"] === "string" ? pkgJson["name"] : entry;
+            typeof pkgJson?.name === "string" ? pkgJson.name : entry;
           errors.push({ packagePath: entryPath, packageName, error: String(err) });
         }
       }
@@ -1209,7 +1207,7 @@ export function pluginLoader(
           } catch (err) {
             const pkgJson = await readPackageJson(entryPath);
             const packageName =
-              typeof pkgJson?.["name"] === "string" ? pkgJson["name"] : entry;
+              typeof pkgJson?.name === "string" ? pkgJson.name : entry;
             errors.push({ packagePath: entryPath, packageName, error: String(err) });
           }
         }
@@ -1232,7 +1230,7 @@ export function pluginLoader(
       if (!pkgJson) return null;
 
       const hasPaperclipPlugin = "paperclipPlugin" in pkgJson;
-      const packageName = typeof pkgJson["name"] === "string" ? pkgJson["name"] : "";
+      const packageName = typeof pkgJson.name === "string" ? pkgJson.name : "";
       const nameMatchesConvention = isPluginPackageName(packageName);
 
       if (!hasPaperclipPlugin && !nameMatchesConvention) {
@@ -1263,10 +1261,10 @@ export function pluginLoader(
 
       log.info(
         {
-          pluginId: discovered.manifest!.id,
+          pluginId: discovered.manifest?.id,
           packageName: discovered.packageName,
           version: discovered.version,
-          capabilities: discovered.manifest!.capabilities,
+          capabilities: discovered.manifest?.capabilities,
         },
         "plugin-loader: plugin installed successfully",
       );

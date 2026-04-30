@@ -228,7 +228,7 @@ export function AutoExpandTextarea({
     el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`;
   }, [minHeight]);
 
-  useEffect(() => { adjustHeight(); }, [value, adjustHeight]);
+  useEffect(() => { adjustHeight(); }, [adjustHeight]);
 
   return (
     <textarea
@@ -309,7 +309,7 @@ export function DraftTextarea({
     el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`;
   }, [minHeight]);
 
-  useEffect(() => { adjustHeight(); }, [draft, adjustHeight]);
+  useEffect(() => { adjustHeight(); }, [adjustHeight]);
 
   return (
     <textarea

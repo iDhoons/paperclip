@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import net from "node:net";
 import path from "node:path";
-import { Command } from "commander";
+import type { Command } from "commander";
 import pc from "picocolors";
 import {
   applyPendingMigrations,
@@ -177,7 +177,7 @@ async function closeDb(db: ClosableDb): Promise<void> {
   await db.$client?.end?.({ timeout: 5 }).catch(() => undefined);
 }
 
-async function openConfiguredDb(configPath: string): Promise<{
+async function _openConfiguredDb(configPath: string): Promise<{
   db: ClosableDb;
   stop: () => Promise<void>;
 }> {

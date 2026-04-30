@@ -73,7 +73,6 @@ export function parseOpenCodeJsonl(stdout: string) {
     if (type === "error") {
       const text = errorText(event.error ?? event.message).trim();
       if (text) errors.push(text);
-      continue;
     }
   }
 

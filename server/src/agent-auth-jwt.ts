@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+// biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
 interface JwtHeader {
   alg: string;
   typ?: string;

@@ -11,8 +11,8 @@
  * Output: tmp/org-chart-images/<style>-<size>.png
  */
 import { chromium } from "@playwright/test";
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 // ── Org data (same as index.html) ──────────────────────────────
 

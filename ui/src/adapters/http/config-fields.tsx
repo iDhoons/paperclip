@@ -21,12 +21,12 @@ export function HttpConfigFields({
       <DraftInput
         value={
           isCreate
-            ? values!.url
+            ? values?.url
             : eff("adapterConfig", "url", String(config.url ?? ""))
         }
         onCommit={(v) =>
           isCreate
-            ? set!({ url: v })
+            ? set?.({ url: v })
             : mark("adapterConfig", "url", v || undefined)
         }
         immediate

@@ -458,6 +458,9 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       : `Claude exited with code ${proc.exitCode ?? -1}`;
   };
 
+  const isSuccessfulResult = (parsed: Record<string, unknown>) =>
+    asString(parsed.subtype, "").trim().toLowerCase() === "success";
+
   const runAttempt = async (resumeSessionId: string | null) => {
     const args = buildClaudeArgs(resumeSessionId);
     if (onMeta) {
@@ -570,7 +573,9 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       errorMessage:
         (proc.exitCode ?? 0) === 0
           ? null
-          : describeClaudeFailure(parsed) ?? `Claude exited with code ${proc.exitCode ?? -1}`,
+          : isSuccessfulResult(parsed)
+            ? null
+            : describeClaudeFailure(parsed) ?? parseFallbackErrorMessage(proc),
       errorCode: loginMeta.requiresLogin ? "claude_auth_required" : null,
       errorMeta,
       usage,

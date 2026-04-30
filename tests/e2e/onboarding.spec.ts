@@ -75,9 +75,9 @@ test.describe("Onboarding wizard", () => {
       page.locator("h3", { hasText: "Ready to launch" })
     ).toBeVisible({ timeout: 10_000 });
 
-    await expect(page.locator("text=" + COMPANY_NAME)).toBeVisible();
-    await expect(page.locator("text=" + AGENT_NAME)).toBeVisible();
-    await expect(page.locator("text=" + TASK_TITLE)).toBeVisible();
+    await expect(page.locator(`text=${COMPANY_NAME}`)).toBeVisible();
+    await expect(page.locator(`text=${AGENT_NAME}`)).toBeVisible();
+    await expect(page.locator(`text=${TASK_TITLE}`)).toBeVisible();
 
     await page.getByRole("button", { name: "Create & Open Issue" }).click();
 

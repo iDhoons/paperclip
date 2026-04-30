@@ -45,6 +45,7 @@ describe("workProductService", () => {
     };
     const transaction = vi.fn(async (callback: (input: typeof tx) => Promise<unknown>) => await callback(tx));
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const svc = workProductService({ transaction } as any);
     const result = await svc.createForIssue("issue-1", "company-1", {
       type: "pull_request",
@@ -81,6 +82,7 @@ describe("workProductService", () => {
     };
     const transaction = vi.fn(async (callback: (input: typeof tx) => Promise<unknown>) => await callback(tx));
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const svc = workProductService({ transaction } as any);
     const result = await svc.update("work-product-1", {
       isPrimary: true,

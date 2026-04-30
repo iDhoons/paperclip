@@ -12,7 +12,7 @@
 
 import { createHash } from "node:crypto";
 import type { ParsedPlan } from "@paperclipai/shared";
-import type { AgentRole, AgentAdapterType } from "@paperclipai/shared";
+import type { AgentRole, } from "@paperclipai/shared";
 
 // ---------------------------------------------------------------------------
 // 타입

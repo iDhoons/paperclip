@@ -100,9 +100,9 @@ async function readClaudeTokenFromFile(credPath: string): Promise<string | null>
   }
   if (typeof parsed !== "object" || parsed === null) return null;
   const obj = parsed as Record<string, unknown>;
-  const oauth = obj["claudeAiOauth"];
+  const oauth = obj.claudeAiOauth;
   if (typeof oauth !== "object" || oauth === null) return null;
-  const token = (oauth as Record<string, unknown>)["accessToken"];
+  const token = (oauth as Record<string, unknown>).accessToken;
   return typeof token === "string" && token.length > 0 ? token : null;
 }
 

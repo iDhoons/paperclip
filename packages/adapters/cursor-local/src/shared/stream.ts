@@ -5,7 +5,7 @@ export function normalizeCursorStreamLine(rawLine: string): {
   const trimmed = rawLine.trim();
   if (!trimmed) return { stream: null, line: "" };
 
-  const prefixed = trimmed.match(/^(stdout|stderr)\s*[:=]?\s*([\[{].*)$/i);
+  const prefixed = trimmed.match(/^(stdout|stderr)\s*[:=]?\s*([[{].*)$/i);
   if (!prefixed) {
     return { stream: null, line: trimmed };
   }

@@ -62,7 +62,7 @@ function toPosixPath(value: string): string {
   return value.split(path.sep).join("/");
 }
 
-function formatFileDependency(absPath: string): string {
+function _formatFileDependency(absPath: string): string {
   return `file:${toPosixPath(path.resolve(absPath))}`;
 }
 

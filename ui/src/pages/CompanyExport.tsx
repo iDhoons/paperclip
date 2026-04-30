@@ -142,7 +142,7 @@ function filterPaperclipYaml(yaml: string, checkedFiles: Set<string>): string {
     }
 
     if (currentSection === "sidebar") {
-      const sidebarMatch = line.match(/^  ([\w-]+):\s*$/);
+      const sidebarMatch = line.match(/^ {2}([\w-]+):\s*$/);
       if (sidebarMatch && !line.startsWith("    ")) {
         flushSidebarSection();
         const sidebarKey = sidebarMatch[1];
@@ -151,7 +151,7 @@ function filterPaperclipYaml(yaml: string, checkedFiles: Set<string>): string {
         continue;
       }
 
-      const sidebarEntryMatch = line.match(/^    - ["']?([^"'\n]+)["']?\s*$/);
+      const sidebarEntryMatch = line.match(/^ {4}- ["']?([^"'\n]+)["']?\s*$/);
       if (sidebarEntryMatch && currentSidebarList) {
         const slug = sidebarEntryMatch[1];
         const sectionSlugs = slugs[currentSidebarList as keyof typeof slugs];
@@ -170,7 +170,7 @@ function filterPaperclipYaml(yaml: string, checkedFiles: Set<string>): string {
     // Inside a filterable section
     if (currentSection && filterableSections.has(currentSection)) {
       // 2-space indented key = entry slug (slugs may start with digits/hyphens)
-      const entryMatch = line.match(/^  ([\w][\w-]*):\s*(.*)$/);
+      const entryMatch = line.match(/^ {2}([\w][\w-]*):\s*(.*)$/);
       if (entryMatch && !line.startsWith("    ")) {
         const slug = entryMatch[1];
         currentEntry = slug;
@@ -634,7 +634,7 @@ export function CompanyExport() {
     }),
     [orderedAgents, orderedProjects, visibleAgents, visibleProjects],
   );
-  const sidebarOrderKey = useMemo(
+  const _sidebarOrderKey = useMemo(
     () => JSON.stringify(sidebarOrder ?? null),
     [sidebarOrder],
   );
@@ -668,7 +668,7 @@ export function CompanyExport() {
     } else if (!urlFile && selectedFile) {
       setSelectedFile(null);
     }
-  }, [location.pathname, exportData]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location.pathname, exportData, selectedFile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setBreadcrumbs([
@@ -756,7 +756,7 @@ export function CompanyExport() {
     setExportData(null);
     exportPreviewMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCompanyId, isSessionFetched, areAgentsFetched, areProjectsFetched, sidebarOrderKey]);
+  }, [selectedCompanyId, isSessionFetched, areAgentsFetched, areProjectsFetched, exportPreviewMutation.mutate, exportPreviewMutation.isPending]);
 
   const tree = useMemo(
     () => (exportData ? buildFileTree(exportData.files) : []),

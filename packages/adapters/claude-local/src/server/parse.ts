@@ -111,12 +111,12 @@ export function extractClaudeLoginUrl(text: string): string | null {
   const match = text.match(URL_RE);
   if (!match || match.length === 0) return null;
   for (const rawUrl of match) {
-    const cleaned = rawUrl.replace(/[\])}.!,?;:'\"]+$/g, "");
+    const cleaned = rawUrl.replace(/[\])}.!,?;:'"]+$/g, "");
     if (cleaned.includes("claude") || cleaned.includes("anthropic") || cleaned.includes("auth")) {
       return cleaned;
     }
   }
-  return match[0]?.replace(/[\])}.!,?;:'\"]+$/g, "") ?? null;
+  return match[0]?.replace(/[\])}.!,?;:'"]+$/g, "") ?? null;
 }
 
 export function detectClaudeLoginRequired(input: {
@@ -139,7 +139,9 @@ export function detectClaudeLoginRequired(input: {
 }
 
 export function describeClaudeFailure(parsed: Record<string, unknown>): string | null {
-  const subtype = asString(parsed.subtype, "");
+  const subtype = asString(parsed.subtype, "").trim().toLowerCase();
+  if (subtype === "success") return null;
+
   const resultText = asString(parsed.result, "").trim();
   const errors = extractClaudeErrorMessages(parsed);
 

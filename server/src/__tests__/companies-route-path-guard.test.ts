@@ -42,6 +42,7 @@ describe("company routes malformed issue path guard", () => {
   it("returns a clear error when companyId is missing for issues list path", async () => {
     const app = express();
     app.use((req, _res, next) => {
+      // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
       (req as any).actor = {
         type: "agent",
         agentId: "agent-1",
@@ -50,6 +51,7 @@ describe("company routes malformed issue path guard", () => {
       };
       next();
     });
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     app.use("/api/companies", companyRoutes({} as any));
 
     const res = await request(app).get("/api/companies/issues");

@@ -52,7 +52,7 @@ function resolveAgentName(
 
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text;
-  return text.slice(0, max - 1) + "\u2026";
+  return `${text.slice(0, max - 1)}\u2026`;
 }
 
 function resolveActorLabel(
@@ -726,7 +726,7 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
     retry: false,
   });
   const currentUserId = session?.user?.id ?? session?.session?.userId ?? null;
-  const socketAuthKey = session?.session?.id ?? currentUserId ?? "signed_out";
+  const _socketAuthKey = session?.session?.id ?? currentUserId ?? "signed_out";
   const liveCompanyId = resolveLiveCompanyId(selectedCompanyId, selectedCompany?.id ?? null);
   const canConnectSocket = sessionStatus === "success" && session !== null && liveCompanyId !== null;
   const currentActorRef = useRef<{ userId: string | null; agentId: string | null }>({
@@ -829,7 +829,7 @@ export function LiveUpdatesProvider({ children }: { children: ReactNode }) {
       socket = null;
       closeSocketQuietly(activeSocket, "provider_unmount");
     };
-  }, [queryClient, liveCompanyId, pushToast, canConnectSocket, socketAuthKey]);
+  }, [queryClient, liveCompanyId, pushToast, canConnectSocket]);
 
   return <>{children}</>;
 }

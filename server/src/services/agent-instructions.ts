@@ -209,7 +209,7 @@ async function readFileSummary(rootPath: string, relativePath: string, entryFile
   };
 }
 
-async function readLegacyInstructions(agent: AgentLike, config: Record<string, unknown>): Promise<string> {
+async function readLegacyInstructions(_agent: AgentLike, config: Record<string, unknown>): Promise<string> {
   const instructionsFilePath = asString(config[FILE_KEY]);
   if (instructionsFilePath) {
     try {

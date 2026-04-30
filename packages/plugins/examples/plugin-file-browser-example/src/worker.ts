@@ -34,7 +34,7 @@ function resolveWorkspace(workspacePath: string, requestedPath?: string): string
  * extensions (e.g. `README.md`).  The file-extension check in
  * `extractFilePaths` filters out non-file matches.
  */
-const FILE_PATH_REGEX = /(?:^|[\s(`"'])([^\s,;)}`"'>\]]*\/[^\s,;)}`"'>\]]+|[.\/~][^\s,;)}`"'>\]]+|[a-zA-Z0-9_-]+\.[a-zA-Z0-9]{1,10}(?:\/[^\s,;)}`"'>\]]+)?)/g;
+const FILE_PATH_REGEX = /(?:^|[\s(`"'])([^\s,;)}`"'>\]]*\/[^\s,;)}`"'>\]]+|[./~][^\s,;)}`"'>\]]+|[a-zA-Z0-9_-]+\.[a-zA-Z0-9]{1,10}(?:\/[^\s,;)}`"'>\]]+)?)/g;
 
 /** Common file extensions to recognise path-like tokens as actual file references. */
 const FILE_EXTENSION_REGEX = /\.[a-zA-Z0-9]{1,10}$/;

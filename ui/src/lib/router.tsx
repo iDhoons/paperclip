@@ -13,7 +13,7 @@ function resolveTo(to: To, companyPrefix: string | null): To {
     return applyCompanyPrefix(to, companyPrefix);
   }
 
-  if (to.pathname && to.pathname.startsWith("/")) {
+  if (to.pathname?.startsWith("/")) {
     const pathname = applyCompanyPrefix(to.pathname, companyPrefix);
     if (pathname !== to.pathname) {
       return { ...to, pathname };

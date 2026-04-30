@@ -16,8 +16,6 @@
 
 import type {
   PluginBridgeErrorCode,
-  PluginLauncherBounds,
-  PluginLauncherRenderEnvironment,
 } from "@paperclipai/shared";
 import type {
   PluginLauncherRenderContextSnapshot,

@@ -10,6 +10,7 @@ export interface FinanceDateRange {
 
 async function assertBelongsToCompany(
   db: Db,
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   table: any,
   id: string,
   companyId: string,

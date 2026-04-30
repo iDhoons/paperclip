@@ -37,9 +37,11 @@ vi.mock("../services/index.js", async () => {
 
   return {
     ...actual,
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     routineService: (db: any) =>
       actual.routineService(db, {
         heartbeat: {
+          // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
           wakeup: async (agentId: string, wakeupOpts: any) => {
             const issueId =
               (typeof wakeupOpts?.payload?.issueId === "string" && wakeupOpts.payload.issueId) ||
@@ -124,6 +126,7 @@ describeEmbeddedPostgres("routine routes end-to-end", () => {
     const app = express();
     app.use(express.json());
     app.use((req, _res, next) => {
+      // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
       (req as any).actor = actor;
       next();
     });

@@ -171,7 +171,7 @@ export function Costs() {
     setBreadcrumbs([{ label: "Costs" }]);
   }, [setBreadcrumbs]);
 
-  const [today, setToday] = useState(() => new Date().toDateString());
+  const [_today, setToday] = useState(() => new Date().toDateString());
   const todayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const schedule = () => {
@@ -188,7 +188,7 @@ export function Costs() {
     };
   }, []);
 
-  const weekRange = useMemo(() => currentWeekRange(), [today]);
+  const weekRange = useMemo(() => currentWeekRange(), []);
   const companyId = selectedCompanyId ?? NO_COMPANY;
 
   const { data: budgetData, isLoading: budgetLoading, error: budgetError } = useQuery({
@@ -265,7 +265,7 @@ export function Costs() {
   const [expandedAgents, setExpandedAgents] = useState<Set<string>>(new Set());
   useEffect(() => {
     setExpandedAgents(new Set());
-  }, [companyId, from, to]);
+  }, []);
 
   function toggleAgent(agentId: string) {
     setExpandedAgents((prev) => {
@@ -952,8 +952,7 @@ export function Costs() {
           {showCustomPrompt ? (
             <p className="text-sm text-muted-foreground">Select a start and end date to load data.</p>
           ) : (
-            <>
-              <Tabs value={effectiveProvider} onValueChange={setActiveProvider}>
+            <Tabs value={effectiveProvider} onValueChange={setActiveProvider}>
                 <PageTabBar items={providerTabItems} value={effectiveProvider} />
 
                 <TabsContent value="all" className="mt-4">
@@ -999,7 +998,6 @@ export function Costs() {
                   </TabsContent>
                 ))}
               </Tabs>
-            </>
           )}
         </TabsContent>
 
@@ -1007,8 +1005,7 @@ export function Costs() {
           {showCustomPrompt ? (
             <p className="text-sm text-muted-foreground">Select a start and end date to load data.</p>
           ) : (
-            <>
-              <Tabs value={effectiveBiller} onValueChange={setActiveBiller}>
+            <Tabs value={effectiveBiller} onValueChange={setActiveBiller}>
                 <PageTabBar items={billerTabItems} value={effectiveBiller} />
 
                 <TabsContent value="all" className="mt-4">
@@ -1052,7 +1049,6 @@ export function Costs() {
                   );
                 })}
               </Tabs>
-            </>
           )}
         </TabsContent>
 

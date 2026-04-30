@@ -108,7 +108,7 @@ describe("cli telemetry", () => {
     expect(client).not.toBeNull();
     expect(fs.existsSync(statePath)).toBe(false);
 
-    client!.track("install.started", { setupMode: "quickstart" });
+    client?.track("install.started", { setupMode: "quickstart" });
 
     expect(fs.existsSync(statePath)).toBe(true);
 

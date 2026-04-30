@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Link } from "@/lib/router";
 import { cn } from "../lib/utils";
 

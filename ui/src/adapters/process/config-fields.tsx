@@ -38,12 +38,12 @@ export function ProcessConfigFields({
         <DraftInput
           value={
             isCreate
-              ? values!.command
+              ? values?.command
               : eff("adapterConfig", "command", String(config.command ?? ""))
           }
           onCommit={(v) =>
             isCreate
-              ? set!({ command: v })
+              ? set?.({ command: v })
               : mark("adapterConfig", "command", v || undefined)
           }
           immediate
@@ -55,12 +55,12 @@ export function ProcessConfigFields({
         <DraftInput
           value={
             isCreate
-              ? values!.args
+              ? values?.args
               : eff("adapterConfig", "args", formatArgList(config.args))
           }
           onCommit={(v) =>
             isCreate
-              ? set!({ args: v })
+              ? set?.({ args: v })
               : mark(
                   "adapterConfig",
                   "args",

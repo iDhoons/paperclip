@@ -320,7 +320,7 @@ export function pluginUiStaticRoutes(db: Db, options: PluginUiStaticRouteOptions
           }
 
           // Proxy the request to the dev server
-          const targetUrl = new URL(rawFilePath, devUiUrl.endsWith("/") ? devUiUrl : devUiUrl + "/");
+          const targetUrl = new URL(rawFilePath, devUiUrl.endsWith("/") ? devUiUrl : `${devUiUrl}/`);
 
           // SSRF protection: only allow http/https and localhost targets for dev proxy
           if (targetUrl.protocol !== "http:" && targetUrl.protocol !== "https:") {

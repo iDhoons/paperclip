@@ -47,6 +47,7 @@ describe("monthly spend hydration", () => {
       }],
     ]);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const companies = companyService(dbStub.db as any);
     const [company] = await companies.list();
 
@@ -82,6 +83,7 @@ describe("monthly spend hydration", () => {
       }],
     ]);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const agents = agentService(dbStub.db as any);
     const agent = await agents.getById("agent-1");
 

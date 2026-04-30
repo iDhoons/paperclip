@@ -16,7 +16,6 @@ import {
   ensurePathInEnv,
   readPaperclipRuntimeSkillEntries,
   resolveCommandForLogs,
-  resolvePaperclipDesiredSkillNames,
   renderTemplate,
   renderPaperclipWakePrompt,
   stringifyPaperclipWakePayload,

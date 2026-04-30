@@ -24,12 +24,12 @@ export async function fetchAllQuotaWindows(): Promise<ProviderQuotaResult[]> {
   const adapters = listServerAdapters().filter((a) => a.getQuotaWindows != null);
 
   const settled = await Promise.allSettled(
-    adapters.map((adapter) => withQuotaTimeout(adapter.type, adapter.getQuotaWindows!())),
+    adapters.map((adapter) => withQuotaTimeout(adapter.type, adapter.getQuotaWindows?.())),
   );
 
   return settled.map((result, i) => {
     if (result.status === "fulfilled") return result.value;
-    const adapterType = adapters[i]!.type;
+    const adapterType = adapters[i]?.type;
     return {
       provider: providerSlugForAdapterType(adapterType),
       ok: false,

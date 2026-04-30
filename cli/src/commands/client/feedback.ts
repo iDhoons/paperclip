@@ -1,7 +1,7 @@
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import pc from "picocolors";
-import { Command } from "commander";
+import type { Command } from "commander";
 import type { Company, FeedbackTrace, FeedbackTraceBundle } from "@paperclipai/shared";
 import {
   addCommonClientOptions,

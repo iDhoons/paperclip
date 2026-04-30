@@ -74,8 +74,8 @@ function layoutTree(node: OrgNode, x: number, y: number): LayoutNode {
 function layoutForest(roots: OrgNode[]): LayoutNode[] {
   if (roots.length === 0) return [];
 
-  const totalW = roots.reduce((sum, r) => sum + subtreeWidth(r), 0);
-  const gaps = (roots.length - 1) * GAP_X;
+  const _totalW = roots.reduce((sum, r) => sum + subtreeWidth(r), 0);
+  const _gaps = (roots.length - 1) * GAP_X;
   let x = PADDING;
   const y = PADDING;
 
@@ -419,7 +419,7 @@ export function OrgChart() {
                       {getAdapterLabel(agent.adapterType)}
                     </span>
                   )}
-                  {agent && agent.capabilities && (
+                  {agent?.capabilities && (
                     <span className="text-[10px] text-muted-foreground/80 leading-tight mt-1 line-clamp-2">
                       {agent.capabilities}
                     </span>

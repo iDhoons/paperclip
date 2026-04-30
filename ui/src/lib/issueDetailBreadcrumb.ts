@@ -41,7 +41,7 @@ function readIssueDetailBreadcrumbHrefFromSearch(search?: string): string | null
   if (!search) return null;
   const params = new URLSearchParams(search);
   const href = params.get(ISSUE_DETAIL_BREADCRUMB_HREF_QUERY_PARAM);
-  return href && href.startsWith("/") ? href : null;
+  return href?.startsWith("/") ? href : null;
 }
 
 function breadcrumbForSource(source: IssueDetailSource): IssueDetailBreadcrumb {

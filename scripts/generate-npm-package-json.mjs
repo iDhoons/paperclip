@@ -104,7 +104,7 @@ if (Object.keys(sortedOptDeps).length > 0) {
   publishPkg.optionalDependencies = sortedOptDeps;
 }
 
-const output = JSON.stringify(publishPkg, null, 2) + "\n";
+const output = `${JSON.stringify(publishPkg, null, 2)}\n`;
 const outPath = resolve(repoRoot, "cli/package.json");
 writeFileSync(outPath, output);
 

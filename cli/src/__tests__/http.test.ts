@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ApiConnectionError, ApiRequestError, PaperclipApiClient } from "../client/http.js";
+import { ApiConnectionError, type ApiRequestError, PaperclipApiClient } from "../client/http.js";
 
 describe("PaperclipApiClient", () => {
   afterEach(() => {

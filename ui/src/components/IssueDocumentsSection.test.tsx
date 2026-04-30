@@ -117,6 +117,7 @@ vi.mock("@/components/ui/dropdown-menu", async () => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 function deferred<T>() {

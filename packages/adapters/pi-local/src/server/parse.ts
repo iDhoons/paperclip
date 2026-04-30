@@ -1,4 +1,4 @@
-import { asNumber, asString, parseJson, parseObject } from "@paperclipai/adapter-utils/server-utils";
+import { asNumber, asString, parseJson, } from "@paperclipai/adapter-utils/server-utils";
 
 interface ParsedPiOutput {
   sessionId: string | null;
@@ -43,7 +43,7 @@ export function parsePiJsonl(stdout: string): ParsedPiOutput {
     toolCalls: [],
   };
 
-  let currentToolCall: { toolCallId: string; toolName: string; args: unknown } | null = null;
+  let _currentToolCall: { toolCallId: string; toolName: string; args: unknown } | null = null;
 
   for (const rawLine of stdout.split(/\r?\n/)) {
     const line = rawLine.trim();
@@ -150,7 +150,7 @@ export function parsePiJsonl(stdout: string): ParsedPiOutput {
       const toolCallId = asString(event.toolCallId, "");
       const toolName = asString(event.toolName, "");
       const args = event.args;
-      currentToolCall = { toolCallId, toolName, args };
+      _currentToolCall = { toolCallId, toolName, args };
       result.toolCalls.push({
         toolCallId,
         toolName,
@@ -163,7 +163,7 @@ export function parsePiJsonl(stdout: string): ParsedPiOutput {
 
     if (eventType === "tool_execution_end") {
       const toolCallId = asString(event.toolCallId, "");
-      const toolName = asString(event.toolName, "");
+      const _toolName = asString(event.toolName, "");
       const toolResult = event.result;
       const isError = event.isError === true;
       
@@ -173,7 +173,7 @@ export function parsePiJsonl(stdout: string): ParsedPiOutput {
         existingCall.result = typeof toolResult === "string" ? toolResult : JSON.stringify(toolResult);
         existingCall.isError = isError;
       }
-      currentToolCall = null;
+      _currentToolCall = null;
       continue;
     }
 

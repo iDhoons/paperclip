@@ -575,7 +575,7 @@ function normalizeContributor(input: {
     return null;
   }
 
-  const key = login ? `login:${login}` : email ? `email:${email}` : `name:${displayName!.toLowerCase()}`;
+  const key = login ? `login:${login}` : email ? `email:${email}` : `name:${displayName?.toLowerCase()}`;
   return {
     displayName: displayName ?? email ?? login ?? "unknown",
     email,

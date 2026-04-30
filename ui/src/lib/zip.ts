@@ -84,7 +84,7 @@ function sharedArchiveRoot(paths: string[]) {
     .map((entry) => normalizeArchivePath(entry).split("/").filter(Boolean))
     .filter((parts) => parts.length > 0);
   if (firstSegments.length === 0) return null;
-  const candidate = firstSegments[0]![0]!;
+  const candidate = firstSegments[0]?.[0]!;
   return firstSegments.every((parts) => parts.length > 1 && parts[0] === candidate)
     ? candidate
     : null;

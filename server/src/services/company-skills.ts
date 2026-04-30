@@ -373,12 +373,12 @@ function parseYamlBlock(
   indentLevel: number,
 ): { value: unknown; nextIndex: number } {
   let index = startIndex;
-  while (index < lines.length && lines[index]!.content.length === 0) index += 1;
-  if (index >= lines.length || lines[index]!.indent < indentLevel) {
+  while (index < lines.length && lines[index]?.content.length === 0) index += 1;
+  if (index >= lines.length || lines[index]?.indent < indentLevel) {
     return { value: {}, nextIndex: index };
   }
 
-  const isArray = lines[index]!.indent === indentLevel && lines[index]!.content.startsWith("-");
+  const isArray = lines[index]?.indent === indentLevel && lines[index]?.content.startsWith("-");
   if (isArray) {
     const values: unknown[] = [];
     while (index < lines.length) {
@@ -405,7 +405,7 @@ function parseYamlBlock(
         const nextObject: Record<string, unknown> = {
           [key]: parseYamlScalar(rawValue),
         };
-        if (index < lines.length && lines[index]!.indent > indentLevel) {
+        if (index < lines.length && lines[index]?.indent > indentLevel) {
           const nested = parseYamlBlock(lines, index, indentLevel + 2);
           if (isPlainRecord(nested.value)) {
             Object.assign(nextObject, nested.value);
@@ -450,7 +450,7 @@ function parseYamlBlock(
 function parseYamlFrontmatter(raw: string): Record<string, unknown> {
   const prepared = prepareYamlLines(raw);
   if (prepared.length === 0) return {};
-  const parsed = parseYamlBlock(prepared, 0, prepared[0]!.indent);
+  const parsed = parseYamlBlock(prepared, 0, prepared[0]?.indent);
   return isPlainRecord(parsed.value) ? parsed.value : {};
 }
 
@@ -520,7 +520,7 @@ function parseGitHubSourceUrl(rawUrl: string) {
     throw unprocessable("Invalid GitHub URL");
   }
   const owner = parts[0]!;
-  const repo = parts[1]!.replace(/\.git$/i, "");
+  const repo = parts[1]?.replace(/\.git$/i, "");
   let ref = "main";
   let basePath = "";
   let filePath: string | null = null;
@@ -996,7 +996,7 @@ async function readUrlSkillImports(
     const parsed = parseGitHubSourceUrl(url);
     const apiBase = gitHubApiBase(parsed.hostname);
     const { pinnedRef, trackingRef } = await resolveGitHubPinnedRef(parsed);
-    let ref = pinnedRef;
+    const ref = pinnedRef;
     const tree = await fetchJson<{ tree?: Array<{ path: string; type: string }> }>(
       `${apiBase}/repos/${parsed.owner}/${parsed.repo}/git/trees/${ref}?recursive=1`,
     ).catch(() => {
@@ -1387,7 +1387,7 @@ function deriveSkillSourceInfo(skill: CompanySkill): {
     const projectName = asString(metadata.projectName);
     const workspaceName = asString(metadata.workspaceName);
     const isProjectScan = metadata.sourceKind === "project_scan";
-    if (localSkillDir && localSkillDir.startsWith(managedRoot)) {
+    if (localSkillDir?.startsWith(managedRoot)) {
       return {
         editable: true,
         editableReason: null,

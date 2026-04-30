@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import { testEnvironment } from "@paperclipai/adapter-gemini-local/server";
 
-async function writeFakeGeminiCommand(binDir: string, argsCapturePath: string): Promise<string> {
+async function writeFakeGeminiCommand(binDir: string, _argsCapturePath: string): Promise<string> {
   const commandPath = path.join(binDir, "gemini");
   const script = `#!/usr/bin/env node
 const fs = require("node:fs");

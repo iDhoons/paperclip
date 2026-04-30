@@ -1,6 +1,5 @@
 import {
   LinkNode,
-  type LinkAttributes,
   type SerializedLinkNode,
 } from "@lexical/link";
 
@@ -32,10 +31,6 @@ export class MentionAwareLinkNode extends LinkNode {
         title: serializedNode.title ?? null,
       },
     );
-  }
-
-  constructor(url?: string, attributes?: LinkAttributes, key?: string) {
-    super(url, attributes, key);
   }
 
   sanitizeUrl(url: string): string {

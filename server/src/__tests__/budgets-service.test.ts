@@ -106,11 +106,13 @@ describe("budgetService", () => {
     dbStub.queueUpdate([]);
     const cancelWorkForScope = vi.fn().mockResolvedValue(undefined);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const service = budgetService(dbStub.db as any, { cancelWorkForScope });
     await service.evaluateCostEvent({
       companyId: "company-1",
       agentId: "agent-1",
       projectId: null,
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any);
 
     expect(dbStub.insertValues).toHaveBeenCalledWith(
@@ -182,6 +184,7 @@ describe("budgetService", () => {
       [{ total: 120 }],
     ]);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const service = budgetService(dbStub.db as any);
     const block = await service.getInvocationBlock("company-1", "agent-1");
 
@@ -208,6 +211,7 @@ describe("budgetService", () => {
       }],
     ]);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const service = budgetService(dbStub.db as any);
     const block = await service.getInvocationBlock("company-1", "agent-1");
 
@@ -239,6 +243,7 @@ describe("budgetService", () => {
       [{ total: 150 }],
     ]);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const service = budgetService(dbStub.db as any);
 
     await expect(
@@ -293,6 +298,7 @@ describe("budgetService", () => {
       }],
     ]);
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const service = budgetService(dbStub.db as any);
     await service.resolveIncident(
       "company-1",

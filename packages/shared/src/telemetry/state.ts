@@ -26,6 +26,6 @@ export function loadOrCreateState(stateDir: string, version: string): TelemetryS
   };
 
   mkdirSync(stateDir, { recursive: true });
-  writeFileSync(filePath, JSON.stringify(state, null, 2) + "\n", "utf-8");
+  writeFileSync(filePath, `${JSON.stringify(state, null, 2)}\n`, "utf-8");
   return state;
 }

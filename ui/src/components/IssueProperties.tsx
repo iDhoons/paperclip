@@ -201,7 +201,7 @@ export function IssueProperties({ issue, onUpdate, inline, childIssues }: IssueP
     const project = orderedProjects.find((p) => p.id === id);
     return project?.name ?? id.slice(0, 8);
   };
-  const currentProject = issue.projectId
+  const _currentProject = issue.projectId
     ? orderedProjects.find((project) => project.id === issue.projectId) ?? null
     : null;
   const projectLink = (id: string | null) => {
@@ -210,7 +210,7 @@ export function IssueProperties({ issue, onUpdate, inline, childIssues }: IssueP
     return project ? projectUrl(project) : `/projects/${id}`;
   };
 
-  const recentAssigneeIds = useMemo(() => getRecentAssigneeIds(), [assigneeOpen]);
+  const recentAssigneeIds = useMemo(() => getRecentAssigneeIds(), []);
   const sortedAgents = useMemo(
     () => sortAgentsByRecency((agents ?? []).filter((a) => a.status !== "terminated"), recentAssigneeIds),
     [agents, recentAssigneeIds],
@@ -256,7 +256,6 @@ export function IssueProperties({ issue, onUpdate, inline, childIssues }: IssueP
         placeholder="Search labels..."
         value={labelSearch}
         onChange={(e) => setLabelSearch(e.target.value)}
-        autoFocus={!inline}
       />
       <div className="max-h-44 overflow-y-auto overscroll-contain space-y-0.5">
         {(labels ?? [])
@@ -343,7 +342,6 @@ export function IssueProperties({ issue, onUpdate, inline, childIssues }: IssueP
         placeholder="Search assignees..."
         value={assigneeSearch}
         onChange={(e) => setAssigneeSearch(e.target.value)}
-        autoFocus={!inline}
       />
       <div className="max-h-48 overflow-y-auto overscroll-contain">
         <button
@@ -430,7 +428,6 @@ export function IssueProperties({ issue, onUpdate, inline, childIssues }: IssueP
         placeholder="Search projects..."
         value={projectSearch}
         onChange={(e) => setProjectSearch(e.target.value)}
-        autoFocus={!inline}
       />
       <div className="max-h-48 overflow-y-auto overscroll-contain">
         <button

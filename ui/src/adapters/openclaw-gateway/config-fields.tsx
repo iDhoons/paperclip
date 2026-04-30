@@ -41,7 +41,7 @@ function SecretField({
           onCommit={onCommit}
           immediate
           type={visible ? "text" : "password"}
-          className={inputClass + " pl-8"}
+          className={`${inputClass} pl-8`}
           placeholder={placeholder}
         />
       </div>
@@ -102,12 +102,12 @@ export function OpenClawGatewayConfigFields({
         <DraftInput
           value={
             isCreate
-              ? values!.url
+              ? values?.url
               : eff("adapterConfig", "url", String(config.url ?? ""))
           }
           onCommit={(v) =>
             isCreate
-              ? set!({ url: v })
+              ? set?.({ url: v })
               : mark("adapterConfig", "url", v || undefined)
           }
           immediate

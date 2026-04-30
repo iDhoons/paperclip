@@ -25,6 +25,7 @@ function makeRes(): Response {
 describe("errorHandler", () => {
   it("attaches the original Error to res.err for 500s", () => {
     const req = makeReq();
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const res = makeRes() as any;
     const next = vi.fn() as unknown as NextFunction;
     const err = new Error("boom");
@@ -39,6 +40,7 @@ describe("errorHandler", () => {
 
   it("attaches HttpError instances for 500 responses", () => {
     const req = makeReq();
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const res = makeRes() as any;
     const next = vi.fn() as unknown as NextFunction;
     const err = new HttpError(500, "db exploded");

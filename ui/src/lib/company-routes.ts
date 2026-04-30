@@ -54,7 +54,7 @@ export function isBoardPathWithoutPrefix(pathname: string): boolean {
 export function extractCompanyPrefixFromPath(pathname: string): string | null {
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 0) return null;
-  const first = segments[0]!.toLowerCase();
+  const first = segments[0]?.toLowerCase();
   if (GLOBAL_ROUTE_ROOTS.has(first) || BOARD_ROUTE_ROOTS.has(first)) {
     return null;
   }
@@ -79,8 +79,8 @@ export function toCompanyRelativePath(path: string): string {
   const segments = pathname.split("/").filter(Boolean);
 
   if (segments.length >= 2) {
-    const second = segments[1]!.toLowerCase();
-    if (!GLOBAL_ROUTE_ROOTS.has(segments[0]!.toLowerCase()) && BOARD_ROUTE_ROOTS.has(second)) {
+    const second = segments[1]?.toLowerCase();
+    if (!GLOBAL_ROUTE_ROOTS.has(segments[0]?.toLowerCase()) && BOARD_ROUTE_ROOTS.has(second)) {
       return `/${segments.slice(1).join("/")}${search}${hash}`;
     }
   }

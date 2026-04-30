@@ -58,6 +58,7 @@ function createApp(route: ReturnType<typeof projectRoutes> | ReturnType<typeof g
   const app = express();
   app.use(express.json());
   app.use((req, _res, next) => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     (req as any).actor = {
       type: "board",
       userId: "board-user",
@@ -96,6 +97,7 @@ describe("project and goal telemetry routes", () => {
   });
 
   it("emits telemetry when a project is created", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const res = await request(createApp(projectRoutes({} as any)))
       .post("/api/companies/company-1/projects")
       .send({ name: "Telemetry project" });
@@ -105,6 +107,7 @@ describe("project and goal telemetry routes", () => {
   });
 
   it("emits telemetry when a goal is created", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const res = await request(createApp(goalRoutes({} as any)))
       .post("/api/companies/company-1/goals")
       .send({ title: "Telemetry goal", level: "team" });

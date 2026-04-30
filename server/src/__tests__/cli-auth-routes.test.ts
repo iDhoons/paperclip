@@ -34,6 +34,7 @@ vi.mock("../services/index.js", () => ({
   deduplicateAgentName: vi.fn((name: string) => name),
 }));
 
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 function createApp(actor: any) {
   const app = express();
   app.use(express.json());
@@ -45,6 +46,7 @@ function createApp(actor: any) {
     import("../middleware/index.js").then(({ errorHandler }) => {
       app.use(
         "/api",
+        // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
         accessRoutes({} as any, {
           deploymentMode: "authenticated",
           deploymentExposure: "private",

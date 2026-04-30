@@ -765,7 +765,7 @@ export function budgetService(db: Db, hooks: BudgetServiceHooks = {}) {
           ),
         )
         .then((rows) => rows[0] ?? null);
-      if (companyPolicy && companyPolicy.hardStopEnabled && companyPolicy.amount > 0) {
+      if (companyPolicy?.hardStopEnabled && companyPolicy.amount > 0) {
         const observed = await computeObservedAmount(db, companyPolicy);
         if (observed >= companyPolicy.amount) {
           return {
@@ -799,7 +799,7 @@ export function budgetService(db: Db, hooks: BudgetServiceHooks = {}) {
           ),
         )
         .then((rows) => rows[0] ?? null);
-      if (agentPolicy && agentPolicy.hardStopEnabled && agentPolicy.amount > 0) {
+      if (agentPolicy?.hardStopEnabled && agentPolicy.amount > 0) {
         const observed = await computeObservedAmount(db, agentPolicy);
         if (observed >= agentPolicy.amount) {
           return {
@@ -840,7 +840,7 @@ export function budgetService(db: Db, hooks: BudgetServiceHooks = {}) {
           ),
         )
         .then((rows) => rows[0] ?? null);
-      if (projectPolicy && projectPolicy.hardStopEnabled && projectPolicy.amount > 0) {
+      if (projectPolicy?.hardStopEnabled && projectPolicy.amount > 0) {
         const observed = await computeObservedAmount(db, projectPolicy);
         if (observed >= projectPolicy.amount) {
           return {

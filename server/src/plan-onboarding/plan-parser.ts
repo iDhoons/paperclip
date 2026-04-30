@@ -148,7 +148,7 @@ function extractCurrentPhase(lines: string[]): string | undefined {
     }
     if (inSection && line.trim()) {
       // "Phase 1: Project Setup — Status: **completed**" 형식
-      const match = line.match(/^(Phase\s+\d+[^—\-]*)/i);
+      const match = line.match(/^(Phase\s+\d+[^—-]*)/i);
       if (match) return match[1].trim();
       return line.trim();
     }
@@ -240,7 +240,7 @@ function extractPhases(lines: string[]): ParsedPhase[] {
       currentPhase.dependencies = depMatch[1]
         .split(",")
         .map((s) => parseInt(s.trim(), 10))
-        .filter((n) => !isNaN(n));
+        .filter((n) => !Number.isNaN(n));
       continue;
     }
 

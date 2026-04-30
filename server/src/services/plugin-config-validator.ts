@@ -29,9 +29,11 @@ export function validateInstanceConfig(
   schema: JsonSchema,
 ): ConfigValidationResult {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   const AjvCtor = (Ajv as any).default ?? Ajv;
   const ajv = new AjvCtor({ allErrors: true });
   // ajv-formats v3 default export is a FormatsPlugin object; call it as a plugin.
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   const applyFormats = (addFormats as any).default ?? addFormats;
   applyFormats(ajv);
   // Register the secret-ref format used by plugin manifests to mark fields that

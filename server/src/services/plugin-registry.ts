@@ -15,11 +15,7 @@ import type {
   UpdatePluginStatus,
   UpsertPluginConfig,
   PatchPluginConfig,
-  PluginEntityRecord,
   PluginEntityQuery,
-  PluginJobRecord,
-  PluginJobRunRecord,
-  PluginWebhookDeliveryRecord,
   PluginJobStatus,
   PluginJobRunStatus,
   PluginJobRunTrigger,
@@ -478,6 +474,7 @@ export function pluginRegistryService(db: Db) {
         .values({
           ...input,
           pluginId,
+        // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
         } as any)
         .returning()
         .then((rows) => rows[0]);

@@ -62,8 +62,8 @@ export function createPluginStreamBus(): PluginStreamBus {
       set.add(listener);
 
       return () => {
-        set!.delete(listener);
-        if (set!.size === 0) {
+        set?.delete(listener);
+        if (set?.size === 0) {
           subscribers.delete(key);
         }
       };

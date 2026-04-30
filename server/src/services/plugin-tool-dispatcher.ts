@@ -27,7 +27,7 @@ import type {
   PaperclipPluginManifestV1,
   PluginRecord,
 } from "@paperclipai/shared";
-import type { ToolRunContext, ToolResult } from "@paperclipai/plugin-sdk";
+import type { ToolRunContext, } from "@paperclipai/plugin-sdk";
 import type { PluginWorkerManager } from "./plugin-worker-manager.js";
 import type { PluginLifecycleManager } from "./plugin-lifecycle.js";
 import {

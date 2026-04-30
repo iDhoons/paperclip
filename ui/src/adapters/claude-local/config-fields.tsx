@@ -35,7 +35,7 @@ export function ClaudeLocalConfigFields({
             <DraftInput
               value={
                 isCreate
-                  ? values!.instructionsFilePath ?? ""
+                  ? values?.instructionsFilePath ?? ""
                   : eff(
                       "adapterConfig",
                       "instructionsFilePath",
@@ -44,7 +44,7 @@ export function ClaudeLocalConfigFields({
               }
               onCommit={(v) =>
                 isCreate
-                  ? set!({ instructionsFilePath: v })
+                  ? set?.({ instructionsFilePath: v })
                   : mark("adapterConfig", "instructionsFilePath", v || undefined)
               }
               immediate
@@ -85,12 +85,12 @@ export function ClaudeLocalAdvancedFields({
         hint={help.chrome}
         checked={
           isCreate
-            ? values!.chrome
+            ? values?.chrome
             : eff("adapterConfig", "chrome", config.chrome === true)
         }
         onChange={(v) =>
           isCreate
-            ? set!({ chrome: v })
+            ? set?.({ chrome: v })
             : mark("adapterConfig", "chrome", v)
         }
       />
@@ -99,7 +99,7 @@ export function ClaudeLocalAdvancedFields({
         hint={help.dangerouslySkipPermissions}
         checked={
           isCreate
-            ? values!.dangerouslySkipPermissions
+            ? values?.dangerouslySkipPermissions
             : eff(
                 "adapterConfig",
                 "dangerouslySkipPermissions",
@@ -108,7 +108,7 @@ export function ClaudeLocalAdvancedFields({
         }
         onChange={(v) =>
           isCreate
-            ? set!({ dangerouslySkipPermissions: v })
+            ? set?.({ dangerouslySkipPermissions: v })
             : mark("adapterConfig", "dangerouslySkipPermissions", v)
         }
       />
@@ -117,8 +117,8 @@ export function ClaudeLocalAdvancedFields({
           <input
             type="number"
             className={inputClass}
-            value={values!.maxTurnsPerRun}
-            onChange={(e) => set!({ maxTurnsPerRun: Number(e.target.value) })}
+            value={values?.maxTurnsPerRun}
+            onChange={(e) => set?.({ maxTurnsPerRun: Number(e.target.value) })}
           />
         ) : (
           <DraftNumberInput

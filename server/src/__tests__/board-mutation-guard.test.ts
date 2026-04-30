@@ -38,10 +38,12 @@ describe("boardMutationGuard", () => {
       method: "POST",
       actor: { type: "board", userId: "board", source: "session" },
       header: () => undefined,
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any;
     const next = vi.fn();
 
@@ -112,10 +114,12 @@ describe("boardMutationGuard", () => {
       method: "POST",
       actor: { type: "agent", agentId: "agent-1" },
       header: () => undefined,
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn(),
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any;
     const next = vi.fn();
 

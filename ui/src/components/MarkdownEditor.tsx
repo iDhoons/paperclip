@@ -419,7 +419,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       all.push(imagePlugin({ imageUploadHandler: imageHandler }));
     }
     return all;
-  }, [hasImageUpload]);
+  }, [hasImageUpload, onChange]);
 
   useEffect(() => {
     if (value !== latestValueRef.current) {
@@ -549,7 +549,7 @@ export const MarkdownEditor = forwardRef<MarkdownEditorRef, MarkdownEditorProps>
       characterData: true,
     });
     return () => observer.disconnect();
-  }, [decorateProjectMentions, value]);
+  }, [decorateProjectMentions]);
 
   const selectMention = useCallback(
     (option: AutocompleteOption) => {

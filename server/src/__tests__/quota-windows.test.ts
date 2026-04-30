@@ -10,7 +10,6 @@ import {
   fetchClaudeQuota,
   parseClaudeCliUsageText,
   readClaudeToken,
-  claudeConfigDir,
 } from "@paperclipai/adapter-claude-local/server";
 
 import {
@@ -19,7 +18,6 @@ import {
   readCodexToken,
   fetchCodexQuota,
   mapCodexRpcQuota,
-  codexHomeDir,
 } from "@paperclipai/adapter-codex-local/server";
 
 // ---------------------------------------------------------------------------
@@ -124,7 +122,7 @@ describe("WHAM used_percent normalization via fetchCodexQuota", () => {
       },
     });
     const windows = await fetchCodexQuota("token", null);
-    expect(windows[0]!.usedPercent).toBe(50);
+    expect(windows[0]?.usedPercent).toBe(50);
   });
 
   it("treats values < 1 as fraction and multiplies by 100 (0.5 → 50%)", async () => {
@@ -138,7 +136,7 @@ describe("WHAM used_percent normalization via fetchCodexQuota", () => {
       },
     });
     const windows = await fetchCodexQuota("token", null);
-    expect(windows[0]!.usedPercent).toBe(50);
+    expect(windows[0]?.usedPercent).toBe(50);
   });
 
   it("treats value exactly 1.0 as 1% (not 100%) — the < 1 heuristic boundary", async () => {
@@ -153,7 +151,7 @@ describe("WHAM used_percent normalization via fetchCodexQuota", () => {
       },
     });
     const windows = await fetchCodexQuota("token", null);
-    expect(windows[0]!.usedPercent).toBe(1);
+    expect(windows[0]?.usedPercent).toBe(1);
   });
 
   it("treats value 0 as 0%", async () => {
@@ -167,7 +165,7 @@ describe("WHAM used_percent normalization via fetchCodexQuota", () => {
       },
     });
     const windows = await fetchCodexQuota("token", null);
-    expect(windows[0]!.usedPercent).toBe(0);
+    expect(windows[0]?.usedPercent).toBe(0);
   });
 
   it("clamps 100% to 100 (no overshoot)", async () => {
@@ -181,7 +179,7 @@ describe("WHAM used_percent normalization via fetchCodexQuota", () => {
       },
     });
     const windows = await fetchCodexQuota("token", null);
-    expect(windows[0]!.usedPercent).toBe(100);
+    expect(windows[0]?.usedPercent).toBe(100);
   });
 
   it("sets usedPercent to null when used_percent is absent", async () => {
@@ -194,7 +192,7 @@ describe("WHAM used_percent normalization via fetchCodexQuota", () => {
       },
     });
     const windows = await fetchCodexQuota("token", null);
-    expect(windows[0]!.usedPercent).toBe(null);
+    expect(windows[0]?.usedPercent).toBe(null);
   });
 });
 
@@ -545,14 +543,14 @@ describe("fetchClaudeQuota", () => {
     });
     const windows = await fetchClaudeQuota("token");
     expect(windows).toHaveLength(2);
-    expect(windows[0]!.label).toBe("Current week (Sonnet only)");
-    expect(windows[1]!.label).toBe("Current week (Opus only)");
+    expect(windows[0]?.label).toBe("Current week (Sonnet only)");
+    expect(windows[1]?.label).toBe("Current week (Opus only)");
   });
 
   it("sets usedPercent to null when utilization is absent", async () => {
     mockFetch({ five_hour: { resets_at: null } });
     const windows = await fetchClaudeQuota("token");
-    expect(windows[0]!.usedPercent).toBe(null);
+    expect(windows[0]?.usedPercent).toBe(null);
   });
 
   it("includes all four windows when all are present", async () => {
@@ -659,8 +657,8 @@ describe("fetchCodexQuota", () => {
     });
     const windows = await fetchCodexQuota("token", null);
     expect(windows).toHaveLength(2);
-    expect(windows[0]!.label).toBe("5h limit");
-    expect(windows[1]!.label).toBe("Weekly limit");
+    expect(windows[0]?.label).toBe("5h limit");
+    expect(windows[1]?.label).toBe("Weekly limit");
   });
 
   it("includes Credits window when credits present and not unlimited", async () => {
@@ -685,7 +683,7 @@ describe("fetchCodexQuota", () => {
       credits: { balance: null, unlimited: false },
     });
     const windows = await fetchCodexQuota("token", null);
-    expect(windows[0]!.valueLabel).toBe("N/A");
+    expect(windows[0]?.valueLabel).toBe("N/A");
   });
 });
 

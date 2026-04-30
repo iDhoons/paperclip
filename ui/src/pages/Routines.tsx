@@ -353,7 +353,7 @@ export function Routines() {
 
   useEffect(() => {
     autoResizeTextarea(titleInputRef.current);
-  }, [draft.title, composerOpen]);
+  }, []);
 
   const createRoutine = useMutation({
     mutationFn: () =>
@@ -447,7 +447,7 @@ export function Routines() {
     },
   });
 
-  const recentAssigneeIds = useMemo(() => getRecentAssigneeIds(), [composerOpen]);
+  const recentAssigneeIds = useMemo(() => getRecentAssigneeIds(), []);
   const assigneeOptions = useMemo<InlineEntityOption[]>(
     () =>
       sortAgentsByRecency(

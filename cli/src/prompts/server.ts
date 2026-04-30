@@ -78,7 +78,7 @@ export async function promptServer(opts?: {
     placeholder: "3100",
     validate: (val) => {
       const n = Number(val);
-      if (isNaN(n) || n < 1 || n > 65535 || !Number.isInteger(n)) {
+      if (Number.isNaN(n) || n < 1 || n > 65535 || !Number.isInteger(n)) {
         return "Must be an integer between 1 and 65535";
       }
     },

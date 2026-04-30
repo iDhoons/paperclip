@@ -71,7 +71,7 @@ export function buildCursorLocalConfig(v: CreateConfigValues): Record<string, un
   const env = parseEnvBindings(v.envBindings);
   const legacy = parseEnvVars(v.envVars);
   for (const [key, value] of Object.entries(legacy)) {
-    if (!Object.prototype.hasOwnProperty.call(env, key)) {
+    if (!Object.hasOwn(env, key)) {
       env[key] = { type: "plain", value };
     }
   }

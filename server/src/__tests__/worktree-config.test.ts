@@ -92,7 +92,7 @@ describe("worktree config repair", () => {
     const isolatedHome = path.join(tempRoot, ".paperclip-worktrees");
 
     await fs.mkdir(paperclipDir, { recursive: true });
-    await fs.writeFile(configPath, JSON.stringify(buildLegacyConfig(sharedRoot), null, 2) + "\n", "utf8");
+    await fs.writeFile(configPath, `${JSON.stringify(buildLegacyConfig(sharedRoot), null, 2)}\n`, "utf8");
     await fs.writeFile(
       envPath,
       [
@@ -151,7 +151,7 @@ describe("worktree config repair", () => {
 
     await fs.mkdir(paperclipDir, { recursive: true });
     await fs.mkdir(siblingInstanceRoot, { recursive: true });
-    await fs.writeFile(configPath, JSON.stringify(buildLegacyConfig(sharedRoot), null, 2) + "\n", "utf8");
+    await fs.writeFile(configPath, `${JSON.stringify(buildLegacyConfig(sharedRoot), null, 2)}\n`, "utf8");
     await fs.writeFile(
       envPath,
       [
@@ -164,7 +164,7 @@ describe("worktree config repair", () => {
     );
     await fs.writeFile(
       path.join(siblingInstanceRoot, "config.json"),
-      JSON.stringify(
+      `${JSON.stringify(
         {
           ...buildLegacyConfig(siblingInstanceRoot),
           database: {
@@ -189,7 +189,7 @@ describe("worktree config repair", () => {
         },
         null,
         2,
-      ) + "\n",
+      )}\n`,
       "utf8",
     );
 
@@ -223,7 +223,7 @@ describe("worktree config repair", () => {
     await fs.mkdir(path.dirname(siblingConfigPath), { recursive: true });
     await fs.writeFile(
       configPath,
-      JSON.stringify(
+      `${JSON.stringify(
         {
           ...buildLegacyConfig(currentInstanceRoot),
           database: {
@@ -271,7 +271,7 @@ describe("worktree config repair", () => {
         },
         null,
         2,
-      ) + "\n",
+      )}\n`,
       "utf8",
     );
     await fs.writeFile(
@@ -286,7 +286,7 @@ describe("worktree config repair", () => {
     );
     await fs.writeFile(
       siblingConfigPath,
-      JSON.stringify(
+      `${JSON.stringify(
         {
           ...buildLegacyConfig(siblingInstanceRoot),
           database: {
@@ -311,7 +311,7 @@ describe("worktree config repair", () => {
         },
         null,
         2,
-      ) + "\n",
+      )}\n`,
       "utf8",
     );
 
@@ -339,7 +339,7 @@ describe("worktree config repair", () => {
     await fs.mkdir(paperclipDir, { recursive: true });
     await fs.writeFile(
       configPath,
-      JSON.stringify(
+      `${JSON.stringify(
         {
           ...buildLegacyConfig(instanceRoot),
           database: {
@@ -387,7 +387,7 @@ describe("worktree config repair", () => {
         },
         null,
         2,
-      ) + "\n",
+      )}\n`,
       "utf8",
     );
 

@@ -178,7 +178,7 @@ async function createMockGatewayServerWithPairing() {
 
   let agentPayload: Record<string, unknown> | null = null;
   let approved = false;
-  let pendingRequestId = "req-1";
+  const pendingRequestId = "req-1";
   let lastSeenDeviceId: string | null = null;
 
   wss.on("connection", (socket) => {

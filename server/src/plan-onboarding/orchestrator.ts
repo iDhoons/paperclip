@@ -50,6 +50,7 @@ export async function onboardFromPlan(
   team: TeamComposition,
   options: OnboardingOptions,
 ): Promise<OnboardingResult> {
+  // biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
   const { companyId, userId } = options;
   const planHash = computePlanHash(plan);
 

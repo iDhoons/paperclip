@@ -766,7 +766,7 @@ export function readPaperclipSkillSyncPreference(config: Record<string, unknown>
         .filter(Boolean)
     : [];
   return {
-    explicit: Object.prototype.hasOwnProperty.call(raw, "desiredSkills"),
+    explicit: Object.hasOwn(raw, "desiredSkills"),
     desiredSkills: Array.from(new Set(desired)),
   };
 }
@@ -784,12 +784,12 @@ function canonicalizeDesiredPaperclipSkillReference(
   const byRuntimeName = availableEntries.filter((entry) =>
     typeof entry.runtimeName === "string" && entry.runtimeName.trim().toLowerCase() === normalizedReference,
   );
-  if (byRuntimeName.length === 1) return byRuntimeName[0]!.key;
+  if (byRuntimeName.length === 1) return byRuntimeName[0]?.key;
 
   const slugMatches = availableEntries.filter((entry) =>
     entry.key.trim().toLowerCase().split("/").pop() === normalizedReference,
   );
-  if (slugMatches.length === 1) return slugMatches[0]!.key;
+  if (slugMatches.length === 1) return slugMatches[0]?.key;
 
   return normalizedReference;
 }

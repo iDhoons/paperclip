@@ -21,13 +21,12 @@ export function GeminiLocalConfigFields({
 }: AdapterConfigFieldsProps) {
   if (hideInstructionsFile) return null;
   return (
-    <>
-      <Field label="Agent instructions file" hint={instructionsFileHint}>
+    <Field label="Agent instructions file" hint={instructionsFileHint}>
         <div className="flex items-center gap-2">
           <DraftInput
             value={
               isCreate
-                ? values!.instructionsFilePath ?? ""
+                ? values?.instructionsFilePath ?? ""
                 : eff(
                     "adapterConfig",
                     "instructionsFilePath",
@@ -36,7 +35,7 @@ export function GeminiLocalConfigFields({
             }
             onCommit={(v) =>
               isCreate
-                ? set!({ instructionsFilePath: v })
+                ? set?.({ instructionsFilePath: v })
                 : mark("adapterConfig", "instructionsFilePath", v || undefined)
             }
             immediate
@@ -46,6 +45,5 @@ export function GeminiLocalConfigFields({
           <ChoosePathButton />
         </div>
       </Field>
-    </>
   );
 }

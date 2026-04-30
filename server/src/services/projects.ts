@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
-import { projects, projectGoals, goals, projectWorkspaces, workspaceRuntimeServices } from "@paperclipai/db";
+import { projects, projectGoals, goals, projectWorkspaces, type workspaceRuntimeServices } from "@paperclipai/db";
 import {
   PROJECT_COLORS,
   deriveProjectUrlKey,
@@ -225,7 +225,7 @@ async function attachWorkspaces(db: Db, rows: ProjectWithGoals[]): Promise<Proje
     .orderBy(desc(projectWorkspaces.isPrimary), asc(projectWorkspaces.createdAt), asc(projectWorkspaces.id));
   const runtimeServicesByWorkspaceId = await listCurrentRuntimeServicesForProjectWorkspaces(
     db,
-    rows[0]!.companyId,
+    rows[0]?.companyId,
     workspaceRows.map((workspace) => workspace.id),
   );
   const sharedRuntimeServicesByWorkspaceId = new Map(
@@ -368,6 +368,7 @@ export function resolveProjectNameForUniqueShortname(
 }
 
 async function ensureSinglePrimaryWorkspace(
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   dbOrTx: any,
   input: {
     companyId: string;
@@ -543,7 +544,7 @@ export function projectService(db: Db) {
       if (rows.length === 0) return [];
       const runtimeServicesByWorkspaceId = await listCurrentRuntimeServicesForProjectWorkspaces(
         db,
-        rows[0]!.companyId,
+        rows[0]?.companyId,
         rows.map((workspace) => workspace.id),
       );
       return rows.map((row) =>

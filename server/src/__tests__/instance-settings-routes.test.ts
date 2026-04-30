@@ -18,6 +18,7 @@ vi.mock("../services/index.js", () => ({
   logActivity: mockLogActivity,
 }));
 
+// biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
 function createApp(actor: any) {
   const app = express();
   app.use(express.json());
@@ -25,6 +26,7 @@ function createApp(actor: any) {
     req.actor = actor;
     next();
   });
+  // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
   app.use("/api", instanceSettingsRoutes({} as any));
   app.use(errorHandler);
   return app;

@@ -42,6 +42,7 @@ describe("notifyHireApproved", () => {
     vi.mocked(findActiveServerAdapter).mockReturnValue({
       type: "openclaw_gateway",
       onHireApproved: vi.fn().mockResolvedValue({ ok: true }),
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any);
 
     const db = mockDbWithAgent({
@@ -92,6 +93,7 @@ describe("notifyHireApproved", () => {
   });
 
   it("does nothing when adapter has no onHireApproved", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     vi.mocked(findActiveServerAdapter).mockReturnValue({ type: "process" } as any);
 
     const db = mockDbWithAgent({
@@ -118,6 +120,7 @@ describe("notifyHireApproved", () => {
     vi.mocked(findActiveServerAdapter).mockReturnValue({
       type: "openclaw_gateway",
       onHireApproved: vi.fn().mockResolvedValue({ ok: false, error: "HTTP 500", detail: { status: 500 } }),
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any);
 
     const db = mockDbWithAgent({
@@ -150,6 +153,7 @@ describe("notifyHireApproved", () => {
     vi.mocked(findActiveServerAdapter).mockReturnValue({
       type: "openclaw_gateway",
       onHireApproved: vi.fn().mockRejectedValue(new Error("Network error")),
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     } as any);
 
     const db = mockDbWithAgent({

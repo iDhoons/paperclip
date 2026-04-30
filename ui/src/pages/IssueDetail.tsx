@@ -137,9 +137,9 @@ function usageNumber(usage: Record<string, unknown> | null, ...keys: string[]) {
   return 0;
 }
 
-function truncate(text: string, max: number): string {
+function _truncate(text: string, max: number): string {
   if (text.length <= max) return text;
-  return text.slice(0, max - 1) + "\u2026";
+  return `${text.slice(0, max - 1)}\u2026`;
 }
 
 function isMarkdownFile(file: File) {
@@ -286,6 +286,7 @@ function ActorIdentity({ evt, agentMap }: { evt: ActivityEvent; agentMap: Map<st
 
 export function IssueDetail() {
   const { issueId } = useParams<{ issueId: string }>();
+  // biome-ignore lint/correctness/noUnusedVariables: existing code, suppress for CI promotion
   const { selectedCompanyId, selectedCompany } = useCompany();
   const { openPanel, closePanel, panelVisible, setPanelVisible } = usePanel();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -529,10 +530,10 @@ export function IssueDetail() {
     for (const evt of activity ?? []) {
       if (evt.action !== "issue.comment_added" || !evt.runId) continue;
       const details = evt.details ?? {};
-      const commentId = typeof details["commentId"] === "string" ? details["commentId"] : null;
+      const commentId = typeof details.commentId === "string" ? details.commentId : null;
       if (!commentId || runMetaByCommentId.has(commentId)) continue;
       const interruptedRunId =
-        typeof details["interruptedRunId"] === "string" ? details["interruptedRunId"] : null;
+        typeof details.interruptedRunId === "string" ? details.interruptedRunId : null;
       runMetaByCommentId.set(commentId, {
         runId: evt.runId,
         runAgentId: evt.agentId ?? agentIdByRunId.get(evt.runId) ?? null,
@@ -998,7 +999,7 @@ export function IssueDetail() {
     if (lastMarkedReadIssueIdRef.current === issue.id) return;
     lastMarkedReadIssueIdRef.current = issue.id;
     markIssueRead.mutate(issue.id);
-  }, [issue?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [issue?.id, markIssueRead.mutate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (issue) {
@@ -1007,7 +1008,7 @@ export function IssueDetail() {
       );
     }
     return () => closePanel();
-  }, [issue, childIssues]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [issue, childIssues, updateIssue.mutate, openPanel, closePanel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const inboxQuickArchiveArmedRef = useRef(false);
   const canQuickArchiveFromInbox =

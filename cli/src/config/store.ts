@@ -105,12 +105,12 @@ export function writeConfig(
 
   // Backup existing config before overwriting
   if (fs.existsSync(filePath)) {
-    const backupPath = filePath + ".backup";
+    const backupPath = `${filePath}.backup`;
     fs.copyFileSync(filePath, backupPath);
     fs.chmodSync(backupPath, 0o600);
   }
 
-  fs.writeFileSync(filePath, JSON.stringify(config, null, 2) + "\n", {
+  fs.writeFileSync(filePath, `${JSON.stringify(config, null, 2)}\n`, {
     mode: 0o600,
   });
 }

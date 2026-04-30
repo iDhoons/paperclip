@@ -68,7 +68,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     if (stored && selectableCompanies.some((c) => c.id === stored)) return;
     if (selectedCompanyId && selectableCompanies.some((c) => c.id === selectedCompanyId)) return;
 
-    const next = selectableCompanies[0]!.id;
+    const next = selectableCompanies[0]?.id;
     setSelectedCompanyIdState(next);
     setSelectionSource("bootstrap");
     localStorage.setItem(STORAGE_KEY, next);

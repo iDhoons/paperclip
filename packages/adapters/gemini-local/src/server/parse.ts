@@ -163,7 +163,6 @@ export function parseGeminiJsonl(stdout: string) {
     if (type === "step_finish" || event.usage || event.usageMetadata) {
       accumulateUsage(usage, event.usage ?? event.usageMetadata);
       costUsd = asNumber(event.total_cost_usd, asNumber(event.cost_usd, asNumber(event.cost, costUsd ?? 0))) || costUsd;
-      continue;
     }
   }
 

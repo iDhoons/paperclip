@@ -400,6 +400,7 @@ describe("company portability", () => {
   });
 
   it("exports referenced skills as stubs by default with sanitized Paperclip extension data", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -443,6 +444,7 @@ describe("company portability", () => {
   });
 
   it("exports default sidebar order into the Paperclip extension and manifest", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     projectSvc.list.mockResolvedValue([
@@ -501,6 +503,7 @@ describe("company portability", () => {
   });
 
   it("expands referenced skills when requested", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -519,6 +522,7 @@ describe("company portability", () => {
   });
 
   it("exports only selected skills when skills filter is provided", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -537,6 +541,7 @@ describe("company portability", () => {
   });
 
   it("warns and exports all skills when skills filter matches nothing", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -578,6 +583,7 @@ describe("company portability", () => {
       originalFilename: "logo.png",
     });
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any, storage as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -599,6 +605,7 @@ describe("company portability", () => {
   });
 
   it("exports duplicate skill slugs into readable namespaced paths", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySkillSvc.readFile.mockImplementation(async (_companyId: string, skillId: string, relativePath: string) => {
@@ -684,6 +691,7 @@ describe("company portability", () => {
   });
 
   it("builds export previews without tasks by default", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     projectSvc.list.mockResolvedValue([
@@ -730,6 +738,7 @@ describe("company portability", () => {
   });
 
   it("exports portable project workspace metadata and remaps it on import", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     projectSvc.list.mockResolvedValue([
@@ -924,6 +933,7 @@ describe("company portability", () => {
   });
 
   it("infers portable git metadata from a local checkout without task warning fan-out", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
     const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-portability-git-"));
     execFileSync("git", ["init"], { cwd: repoDir, stdio: "ignore" });
@@ -1009,6 +1019,7 @@ describe("company portability", () => {
   });
 
   it("collapses repeated task workspace warnings into one summary per missing workspace", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     projectSvc.list.mockResolvedValue([
@@ -1112,6 +1123,7 @@ describe("company portability", () => {
   });
 
   it("reads env inputs back from .paperclip.yaml during preview import", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -1167,6 +1179,7 @@ describe("company portability", () => {
   });
 
   it("exports routines as recurring task packages with Paperclip routine extensions", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     projectSvc.list.mockResolvedValue([
@@ -1297,6 +1310,7 @@ describe("company portability", () => {
   });
 
   it("imports recurring task packages as routines instead of one-time issues", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -1418,6 +1432,7 @@ describe("company portability", () => {
   });
 
   it("migrates legacy schedule.recurrence imports into routine triggers", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -1492,6 +1507,7 @@ describe("company portability", () => {
   });
 
   it("flags recurring task imports that are missing routine-required fields", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     const preview = await portability.previewImport({
@@ -1521,6 +1537,7 @@ describe("company portability", () => {
   });
 
   it("imports a vendor-neutral package without .paperclip.yaml", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -1639,6 +1656,7 @@ describe("company portability", () => {
   });
 
   it("treats no-separator auth and api key env names as secrets during export", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     agentSvc.list.mockResolvedValue([
@@ -1696,6 +1714,7 @@ describe("company portability", () => {
   });
 
   it("imports packaged skills and restores desired skill refs on agents", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -1778,6 +1797,7 @@ describe("company portability", () => {
       name: "ClaudeCoder",
     });
 
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any, storage as any);
     const exported = await portability.exportBundle("company-1", {
       include: {
@@ -1838,6 +1858,7 @@ describe("company portability", () => {
   });
 
   it("copies source company memberships for safe new-company imports", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -1893,6 +1914,7 @@ describe("company portability", () => {
   });
 
   it("disables timer heartbeats on imported agents", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -1948,6 +1970,7 @@ describe("company portability", () => {
   });
 
   it("imports only selected files and leaves unchecked company metadata alone", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     const exported = await portability.exportBundle("company-1", {
@@ -2036,6 +2059,7 @@ describe("company portability", () => {
   });
 
   it("applies adapter overrides while keeping imported AGENTS content implicit", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
@@ -2116,6 +2140,7 @@ describe("company portability", () => {
   });
 
   it("strips root AGENTS frontmatter when importing a nested agent entry path", async () => {
+    // biome-ignore lint/suspicious/noExplicitAny: existing code, suppress for CI promotion
     const portability = companyPortabilityService({} as any);
 
     companySvc.create.mockResolvedValue({
