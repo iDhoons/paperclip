@@ -24,17 +24,15 @@ import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { queryKeys } from "../lib/queryKeys";
 import { AgentConfigForm } from "../components/AgentConfigForm";
 import { PageTabBar } from "../components/PageTabBar";
-import { adapterLabels, roleLabels, help } from "../components/agent-config-primitives";
+import { adapterLabels, roleLabels, } from "../components/agent-config-primitives";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { MarkdownEditor } from "../components/MarkdownEditor";
 import { assetsApi } from "../api/assets";
 import { getUIAdapter, buildTranscript, onAdapterChange } from "../adapters";
 import { StatusBadge } from "../components/StatusBadge";
-import { agentStatusDot, agentStatusDotDefault } from "../lib/status-colors";
 import { MarkdownBody } from "../components/MarkdownBody";
 import { CopyText } from "../components/CopyText";
 import { EntityRow } from "../components/EntityRow";
-import { Identity } from "../components/Identity";
 import { PageSkeleton } from "../components/PageSkeleton";
 import { RunButton, PauseResumeButton } from "../components/AgentActionButtons";
 import { BudgetPolicyCard } from "../components/BudgetPolicyCard";
@@ -81,14 +79,12 @@ import {
   isUuidLike,
   type Agent,
   type AgentSkillEntry,
-  type AgentSkillSnapshot,
   type AgentDetail as AgentDetailRecord,
   type BudgetPolicySummary,
   type HeartbeatRun,
   type HeartbeatRunEvent,
   type AgentRuntimeState,
   type LiveEvent,
-  type WorkspaceOperation,
 } from "@paperclipai/shared";
 import { redactHomePathUserSegments, redactHomePathUserSegmentsInValue } from "@paperclipai/adapter-utils";
 import { agentRouteRef } from "../lib/utils";
@@ -97,6 +93,8 @@ import {
   arraysEqual,
   isReadOnlyUnmanagedSkillEntry,
 } from "../lib/agent-skills-state";
+import { RunInvocationCard, WorkspaceOperationsSection } from "./agent-detail/RunWorkspacePanels";
+export { RunInvocationCard } from "./agent-detail/RunWorkspacePanels";
 
 const runStatusIcons: Record<string, { icon: typeof CheckCircle2; color: string }> = {
   succeeded: { icon: CheckCircle2, color: "text-green-600 dark:text-green-400" },
@@ -277,8 +275,6 @@ function runMetrics(run: HeartbeatRun) {
   };
 }
 
-type RunLogChunk = { ts: string; stream: "stdout" | "stderr" | "system"; chunk: string };
-
 function asRecord(value: unknown): Record<string, unknown> | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
   return value as Record<string, unknown>;
@@ -288,328 +284,6 @@ function asNonEmptyString(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : null;
-}
-
-export function RunInvocationCard({
-  payload,
-  censorUsernameInLogs,
-}: {
-  payload: Record<string, unknown>;
-  censorUsernameInLogs: boolean;
-}) {
-  const commandLine = [
-    typeof payload.command === "string" ? payload.command : null,
-    ...(Array.isArray(payload.commandArgs)
-      ? payload.commandArgs.filter((value): value is string => typeof value === "string")
-      : []),
-  ]
-    .filter((value): value is string => Boolean(value))
-    .join(" ");
-
-  const hasAdvancedDetails =
-    commandLine.length > 0
-    || (Array.isArray(payload.commandNotes) && payload.commandNotes.length > 0)
-    || payload.prompt !== undefined
-    || payload.context !== undefined
-    || payload.env !== undefined;
-
-  return (
-    <div className="rounded-lg border border-border bg-background/60 p-3 space-y-2">
-      <div className="text-xs font-medium text-muted-foreground">Invocation</div>
-      {typeof payload.adapterType === "string" && (
-        <div className="text-xs"><span className="text-muted-foreground">Adapter: </span>{payload.adapterType}</div>
-      )}
-      {typeof payload.cwd === "string" && (
-        <div className="text-xs break-all"><span className="text-muted-foreground">Working dir: </span><span className="font-mono">{payload.cwd}</span></div>
-      )}
-      {hasAdvancedDetails && (
-        <Collapsible>
-          <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors group">
-            <ChevronRight className="h-3 w-3 transition-transform group-data-[state=open]:rotate-90" />
-            Details
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-2 space-y-2">
-            {commandLine && (
-              <div className="text-xs break-all">
-                <span className="text-muted-foreground">Command: </span>
-                <span className="font-mono">{commandLine}</span>
-              </div>
-            )}
-            {Array.isArray(payload.commandNotes) && payload.commandNotes.length > 0 && (
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">Command notes</div>
-                <ul className="list-disc pl-5 space-y-1">
-                  {payload.commandNotes
-                    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
-                    .map((note, idx) => (
-                      <li key={`${idx}-${note}`} className="text-xs break-all font-mono">
-                        {note}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-            {payload.prompt !== undefined && (
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">Prompt</div>
-                <pre className="bg-neutral-100 dark:bg-neutral-950 rounded-md p-2 text-xs overflow-x-auto whitespace-pre-wrap">
-                  {typeof payload.prompt === "string"
-                    ? redactPathText(payload.prompt, censorUsernameInLogs)
-                    : JSON.stringify(redactPathValue(payload.prompt, censorUsernameInLogs), null, 2)}
-                </pre>
-              </div>
-            )}
-            {payload.context !== undefined && (
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">Context</div>
-                <pre className="bg-neutral-100 dark:bg-neutral-950 rounded-md p-2 text-xs overflow-x-auto whitespace-pre-wrap">
-                  {JSON.stringify(redactPathValue(payload.context, censorUsernameInLogs), null, 2)}
-                </pre>
-              </div>
-            )}
-            {payload.env !== undefined && (
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">Environment</div>
-                <pre className="bg-neutral-100 dark:bg-neutral-950 rounded-md p-2 text-xs overflow-x-auto whitespace-pre-wrap font-mono">
-                  {formatEnvForDisplay(payload.env, censorUsernameInLogs)}
-                </pre>
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
-      )}
-    </div>
-  );
-}
-
-function parseStoredLogContent(content: string): RunLogChunk[] {
-  const parsed: RunLogChunk[] = [];
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    try {
-      const raw = JSON.parse(trimmed) as { ts?: unknown; stream?: unknown; chunk?: unknown };
-      const stream =
-        raw.stream === "stderr" || raw.stream === "system" ? raw.stream : "stdout";
-      const chunk = typeof raw.chunk === "string" ? raw.chunk : "";
-      const ts = typeof raw.ts === "string" ? raw.ts : new Date().toISOString();
-      if (!chunk) continue;
-      parsed.push({ ts, stream, chunk });
-    } catch {
-      // Ignore malformed log lines.
-    }
-  }
-  return parsed;
-}
-
-function workspaceOperationPhaseLabel(phase: WorkspaceOperation["phase"]) {
-  switch (phase) {
-    case "worktree_prepare":
-      return "Worktree setup";
-    case "workspace_provision":
-      return "Provision";
-    case "workspace_teardown":
-      return "Teardown";
-    case "worktree_cleanup":
-      return "Worktree cleanup";
-    default:
-      return phase;
-  }
-}
-
-function workspaceOperationStatusTone(status: WorkspaceOperation["status"]) {
-  switch (status) {
-    case "succeeded":
-      return "border-green-500/20 bg-green-500/10 text-green-700 dark:text-green-300";
-    case "failed":
-      return "border-red-500/20 bg-red-500/10 text-red-700 dark:text-red-300";
-    case "running":
-      return "border-cyan-500/20 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300";
-    case "skipped":
-      return "border-yellow-500/20 bg-yellow-500/10 text-yellow-700 dark:text-yellow-300";
-    default:
-      return "border-border bg-muted/40 text-muted-foreground";
-  }
-}
-
-function WorkspaceOperationStatusBadge({ status }: { status: WorkspaceOperation["status"] }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium capitalize",
-        workspaceOperationStatusTone(status),
-      )}
-    >
-      {status.replace("_", " ")}
-    </span>
-  );
-}
-
-function WorkspaceOperationLogViewer({
-  operation,
-  censorUsernameInLogs,
-}: {
-  operation: WorkspaceOperation;
-  censorUsernameInLogs: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const { data: logData, isLoading, error } = useQuery({
-    queryKey: ["workspace-operation-log", operation.id],
-    queryFn: () => heartbeatsApi.workspaceOperationLog(operation.id),
-    enabled: open && Boolean(operation.logRef),
-    refetchInterval: open && operation.status === "running" ? 2000 : false,
-  });
-
-  const chunks = useMemo(
-    () => (logData?.content ? parseStoredLogContent(logData.content) : []),
-    [logData?.content],
-  );
-
-  return (
-    <div className="space-y-2">
-      <button
-        type="button"
-        className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
-        onClick={() => setOpen((value) => !value)}
-      >
-        {open ? "Hide full log" : "Show full log"}
-      </button>
-      {open && (
-        <div className="rounded-md border border-border bg-background/70 p-2">
-          {isLoading && <div className="text-xs text-muted-foreground">Loading log...</div>}
-          {error && (
-            <div className="text-xs text-destructive">
-              {error instanceof Error ? error.message : "Failed to load workspace operation log"}
-            </div>
-          )}
-          {!isLoading && !error && chunks.length === 0 && (
-            <div className="text-xs text-muted-foreground">No persisted log lines.</div>
-          )}
-          {chunks.length > 0 && (
-            <div className="max-h-64 overflow-y-auto rounded bg-neutral-100 p-2 font-mono text-xs dark:bg-neutral-950">
-              {chunks.map((chunk, index) => (
-                <div key={`${chunk.ts}-${index}`} className="flex gap-2">
-                  <span className="shrink-0 text-neutral-500">
-                    {new Date(chunk.ts).toLocaleTimeString("en-US", { hour12: false })}
-                  </span>
-                  <span
-                    className={cn(
-                      "shrink-0 w-14",
-                      chunk.stream === "stderr"
-                        ? "text-red-600 dark:text-red-300"
-                        : chunk.stream === "system"
-                          ? "text-blue-600 dark:text-blue-300"
-                          : "text-muted-foreground",
-                    )}
-                  >
-                    [{chunk.stream}]
-                  </span>
-                  <span className="whitespace-pre-wrap break-all">{redactPathText(chunk.chunk, censorUsernameInLogs)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function WorkspaceOperationsSection({
-  operations,
-  censorUsernameInLogs,
-}: {
-  operations: WorkspaceOperation[];
-  censorUsernameInLogs: boolean;
-}) {
-  if (operations.length === 0) return null;
-
-  return (
-    <div className="rounded-lg border border-border bg-background/60 p-3 space-y-3">
-      <div className="text-xs font-medium text-muted-foreground">
-        Workspace ({operations.length})
-      </div>
-      <div className="space-y-3">
-        {operations.map((operation) => {
-          const metadata = asRecord(operation.metadata);
-          return (
-            <div key={operation.id} className="rounded-md border border-border/70 bg-background/70 p-3 space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="text-sm font-medium">{workspaceOperationPhaseLabel(operation.phase)}</div>
-                <WorkspaceOperationStatusBadge status={operation.status} />
-                <div className="text-[11px] text-muted-foreground">
-                  {relativeTime(operation.startedAt)}
-                  {operation.finishedAt && ` to ${relativeTime(operation.finishedAt)}`}
-                </div>
-              </div>
-              {operation.command && (
-                <div className="text-xs break-all">
-                  <span className="text-muted-foreground">Command: </span>
-                  <span className="font-mono">{operation.command}</span>
-                </div>
-              )}
-              {operation.cwd && (
-                <div className="text-xs break-all">
-                  <span className="text-muted-foreground">Working dir: </span>
-                  <span className="font-mono">{operation.cwd}</span>
-                </div>
-              )}
-              {(asNonEmptyString(metadata?.branchName)
-                || asNonEmptyString(metadata?.baseRef)
-                || asNonEmptyString(metadata?.worktreePath)
-                || asNonEmptyString(metadata?.repoRoot)
-                || asNonEmptyString(metadata?.cleanupAction)) && (
-                <div className="grid gap-1 text-xs sm:grid-cols-2">
-                  {asNonEmptyString(metadata?.branchName) && (
-                    <div><span className="text-muted-foreground">Branch: </span><span className="font-mono">{metadata?.branchName as string}</span></div>
-                  )}
-                  {asNonEmptyString(metadata?.baseRef) && (
-                    <div><span className="text-muted-foreground">Base ref: </span><span className="font-mono">{metadata?.baseRef as string}</span></div>
-                  )}
-                  {asNonEmptyString(metadata?.worktreePath) && (
-                    <div className="break-all"><span className="text-muted-foreground">Worktree: </span><span className="font-mono">{metadata?.worktreePath as string}</span></div>
-                  )}
-                  {asNonEmptyString(metadata?.repoRoot) && (
-                    <div className="break-all"><span className="text-muted-foreground">Repo root: </span><span className="font-mono">{metadata?.repoRoot as string}</span></div>
-                  )}
-                  {asNonEmptyString(metadata?.cleanupAction) && (
-                    <div><span className="text-muted-foreground">Cleanup: </span><span className="font-mono">{metadata?.cleanupAction as string}</span></div>
-                  )}
-                </div>
-              )}
-              {typeof metadata?.created === "boolean" && (
-                <div className="text-xs text-muted-foreground">
-                  {metadata.created ? "Created by this run" : "Reused existing workspace"}
-                </div>
-              )}
-              {operation.stderrExcerpt && operation.stderrExcerpt.trim() && (
-                <div>
-                  <div className="mb-1 text-xs text-red-700 dark:text-red-300">stderr excerpt</div>
-                  <pre className="rounded-md bg-red-50 p-2 text-xs whitespace-pre-wrap break-all text-red-800 dark:bg-neutral-950 dark:text-red-100">
-                    {redactPathText(operation.stderrExcerpt, censorUsernameInLogs)}
-                  </pre>
-                </div>
-              )}
-              {operation.stdoutExcerpt && operation.stdoutExcerpt.trim() && (
-                <div>
-                  <div className="mb-1 text-xs text-muted-foreground">stdout excerpt</div>
-                  <pre className="rounded-md bg-neutral-100 p-2 text-xs whitespace-pre-wrap break-all dark:bg-neutral-950">
-                    {redactPathText(operation.stdoutExcerpt, censorUsernameInLogs)}
-                  </pre>
-                </div>
-              )}
-              {operation.logRef && (
-                <WorkspaceOperationLogViewer
-                  operation={operation}
-                  censorUsernameInLogs={censorUsernameInLogs}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
 }
 
 export function AgentDetail() {
@@ -691,8 +365,8 @@ export function AgentDetail() {
 
   const assignedIssues = (allIssues ?? [])
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  const reportsToAgent = (allAgents ?? []).find((a) => a.id === agent?.reportsTo);
-  const directReports = (allAgents ?? []).filter((a) => a.reportsTo === agent?.id && a.status !== "terminated");
+  const _reportsToAgent = (allAgents ?? []).find((a) => a.id === agent?.reportsTo);
+  const _directReports = (allAgents ?? []).filter((a) => a.reportsTo === agent?.id && a.status !== "terminated");
   const agentBudgetSummary = useMemo(() => {
     const matched = budgetOverview?.policies.find(
       (policy) => policy.scopeType === "agent" && policy.scopeId === (agent?.id ?? routeAgentRef),
@@ -1152,7 +826,7 @@ export function AgentDetail() {
 
 /* ---- Helper components ---- */
 
-function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
+function _SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-muted-foreground text-xs">{label}</span>
@@ -1717,7 +1391,7 @@ function PromptsTab({
     setAwaitingRefresh(false);
     lastFileVersionRef.current = null;
     externalBundleRef.current = null;
-  }, [agent.id]);
+  }, []);
 
   const isLocal =
     agent.adapterType === "claude_local" ||
@@ -2475,7 +2149,7 @@ function AgentSkillsTab({
     lastSavedSkillsRef.current = [];
     hasHydratedSkillSnapshotRef.current = false;
     skipNextSkillAutosaveRef.current = true;
-  }, [agent.id]);
+  }, []);
 
   useEffect(() => {
     if (!skillSnapshot) return;
@@ -2975,7 +2649,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
 
   useEffect(() => {
     setClaudeLoginResult(null);
-  }, [run.id]);
+  }, []);
 
   const cancelRun = useMutation({
     mutationFn: () => heartbeatsApi.cancel(run.id),
@@ -3106,7 +2780,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
   const hasMetrics = metrics.input > 0 || metrics.output > 0 || metrics.cached > 0 || metrics.cost > 0;
   const hasSession = !!(run.sessionIdBefore || run.sessionIdAfter);
   const sessionChanged = run.sessionIdBefore && run.sessionIdAfter && run.sessionIdBefore !== run.sessionIdAfter;
-  const sessionId = run.sessionIdAfter || run.sessionIdBefore;
+  const _sessionId = run.sessionIdAfter || run.sessionIdBefore;
   const hasNonZeroExit = run.exitCode !== null && run.exitCode !== 0;
 
   return (
@@ -3497,7 +3171,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
     }
 
     updateFollowingState();
-  }, [isLive, run.id, updateFollowingState]);
+  }, [isLive, updateFollowingState]);
 
   useEffect(() => {
     if (!isLive) return;
@@ -3518,7 +3192,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
       }
       window.removeEventListener("resize", updateFollowingState);
     };
-  }, [isLive, run.id, getScrollContainer, updateFollowingState]);
+  }, [isLive, getScrollContainer, updateFollowingState]);
 
   // Auto-scroll only for live runs when following
   useEffect(() => {
@@ -3546,7 +3220,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
       isFollowingRef.current = true;
     }
     setIsFollowing((prev) => (prev ? prev : true));
-  }, [events.length, logLines.length, isLive, getScrollContainer]);
+  }, [isLive, getScrollContainer]);
 
   // Fetch persisted shell log
   useEffect(() => {
@@ -3600,7 +3274,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
     return () => {
       cancelled = true;
     };
-  }, [run.id, run.logRef, run.logBytes, isLive]);
+  }, [run.id, run.logRef, run.logBytes, isLive, isRunLogUnavailable, appendLogContent]);
 
   // Poll for live updates
   useEffect(() => {
@@ -3639,7 +3313,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
       }
     }, 2000);
     return () => clearInterval(interval);
-  }, [run.id, isLive, isStreamingConnected, logOffset]);
+  }, [run.id, isLive, isStreamingConnected, logOffset, isRunLogUnavailable, appendLogContent]);
 
   // Stream live updates from websocket (primary path for running runs).
   useEffect(() => {
@@ -3767,7 +3441,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
   // parseStdoutLine asynchronously after dynamic parser loading. Memoizing
   // on adapterType alone would stale the transcript with the fallback parser.
   // We subscribe to adapter registry changes to force transcript recomputation.
-  const [parserTick, setParserTick] = useState(0);
+  const [_parserTick, setParserTick] = useState(0);
   const adapter = getUIAdapter(adapterType);
 
   useEffect(() => {
@@ -3776,12 +3450,12 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
 
   const transcript = useMemo(
     () => buildTranscript(logLines, adapter, { censorUsernameInLogs }),
-    [adapter, censorUsernameInLogs, logLines, parserTick],
+    [adapter, censorUsernameInLogs, logLines],
   );
 
   useEffect(() => {
     setTranscriptMode("nice");
-  }, [run.id]);
+  }, []);
 
   if (loading && logLoading) {
     return <p className="text-xs text-muted-foreground">Loading run logs...</p>;
@@ -3885,7 +3559,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
               {redactPathText(run.error, censorUsernameInLogs)}
             </div>
           )}
-          {run.stderrExcerpt && run.stderrExcerpt.trim() && (
+          {run.stderrExcerpt?.trim() && (
             <div>
               <div className="text-xs text-red-700 dark:text-red-300 mb-1">stderr excerpt</div>
               <pre className="bg-red-50 dark:bg-neutral-950 rounded-md p-2 text-xs overflow-x-auto whitespace-pre-wrap text-red-800 dark:text-red-100">
@@ -3901,7 +3575,7 @@ function LogViewer({ run, adapterType }: { run: HeartbeatRun; adapterType: strin
               </pre>
             </div>
           )}
-          {run.stdoutExcerpt && run.stdoutExcerpt.trim() && !run.resultJson && (
+          {run.stdoutExcerpt?.trim() && !run.resultJson && (
             <div>
               <div className="text-xs text-red-700 dark:text-red-300 mb-1">stdout excerpt</div>
               <pre className="bg-red-50 dark:bg-neutral-950 rounded-md p-2 text-xs overflow-x-auto whitespace-pre-wrap text-red-800 dark:text-red-100">
